@@ -29,7 +29,8 @@ public class AgentTools {
 
             try (FileWriter writer = new FileWriter(filePath)) {
                 writer.write(content);
-                return String.format("成功将内容写入文件 '%s'。", filePath);
+//                return String.format("成功将内容写入文件 '%s'。", filePath);
+                return String.format("写入成功");
             } catch (IOException e) {
                 return String.format("写入文件 '%s' 时发生错误: %s", filePath, e.getMessage());
             }

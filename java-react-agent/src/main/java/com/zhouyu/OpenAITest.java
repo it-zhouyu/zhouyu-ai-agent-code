@@ -9,6 +9,8 @@ import com.openai.models.ChatCompletionCreateParams;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 作者：IT周瑜
@@ -18,12 +20,30 @@ import java.util.HashMap;
 public class OpenAITest {
 
     private static final String REACT_PROMPT_TEMPLATE = """
+            
+            ## 角色定义
             你是一个强大的 AI 助手，通过思考和使用工具来解决用户的问题。
             
+            ## 任务
             你的任务是尽你所能回答以下问题。你可以使用以下工具：
             {tools}
            
+            ## 规则
+            - Action中只需要返回toolName
+           
+            ## 输出格式
+            Reason: 你思考的过程
+            Action: 你的下一步动作，你想要执行的工具是哪个，必须是{tools}中的一个
+            ActionInput: 你要调用的工具的输入参数是什么
+            ...
+            FinalAnswer: 表示最终的答案，只需要最后输出就可以了
+            
+            
+            ## 用户需求
             Question: {input}
+            
+            ## 历史聊天记录
+            {history}
             """;
 
     public static void main(String[] args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
@@ -51,18 +71,70 @@ public class OpenAITest {
         String rawLlmOutput = chatCompletion.choices().get(0).message().content().get();
         System.out.println(rawLlmOutput);
 
+        ParsedOutput parsedOutput = parseLlmOutput(rawLlmOutput);
+        System.out.println(parsedOutput);
+
 
         // 执行工具
-        rawLlmOutput = rawLlmOutput.replace("```tool_code", "");
-        rawLlmOutput = rawLlmOutput.replace("```", "");
-
-        JSONObject jsonObject = JSONObject.parseObject(rawLlmOutput);
-        String toolName = jsonObject.getString("toolName");
-        String toolParams = jsonObject.getString("params");
+        String toolName = parsedOutput.action;
+        String toolParams = parsedOutput.actionInputStr;
 
         Method toolMethod = tools.get(toolName);
-        Object result = toolMethod.invoke(new AgentTools(), toolParams);
-        System.out.println(result);
+        Object observation = toolMethod.invoke(new AgentTools(), toolParams);
+        System.out.println(observation);
 
+
+
+
+        StringBuilder history = new StringBuilder();
+        history.append("Reason: ").append(parsedOutput.reason).append("\n")
+                .append("Action: ").append(parsedOutput.action).append("\n")
+                .append("ActionInput: ").append(parsedOutput.actionInputStr).append("\n")
+                .append("Observation: ").append(observation).append("\n");
+
+        String prompt1 = REACT_PROMPT_TEMPLATE.replace("{tools}", ToolUtil.getToolDescription(AgentTools.class));
+        prompt1 = prompt1.replace("{input}", promptString);
+        prompt1 = prompt1.replace("{history}", history.toString());
+
+        ChatCompletionCreateParams params1 = ChatCompletionCreateParams.builder()
+                .addUserMessage(prompt1)
+                .model(ModelConfig.LLM_NAME)
+                .build();
+
+        ChatCompletion chatCompletion1 = apiClient.chat().completions().create(params1);
+        String rawLlmOutput1 = chatCompletion1.choices().get(0).message().content().get();
+        System.out.println(rawLlmOutput1);
+    }
+
+    private static ParsedOutput parseLlmOutput(String llmOutput) {
+        if (llmOutput.contains("FinalAnswer: ")) {
+            return new ParsedOutput("final_answer", llmOutput.split("FinalAnswer: ")[1].strip(), null, null, null, null);
+        }
+
+        Pattern actionPattern = Pattern.compile("Reason:(.*?)Action:(.*?)ActionInput:(.*)", Pattern.DOTALL);
+        Matcher matcher = actionPattern.matcher(llmOutput);
+
+        if (matcher.find()) {
+            String reason = matcher.group(1).trim();
+            String action = matcher.group(2).trim();
+            String actionInputStr = matcher.group(3).trim();
+
+            if (actionInputStr.startsWith("```json")) {
+                actionInputStr = actionInputStr.substring(7);
+            }
+            if (actionInputStr.endsWith("```")) {
+                actionInputStr = actionInputStr.substring(0, actionInputStr.length() - 3);
+            }
+            actionInputStr = actionInputStr.trim();
+
+            return new ParsedOutput("action", null, reason, action, actionInputStr, null);
+        }
+
+        return new ParsedOutput("error", null, null, null, null, String.format("解析LLM输出失败: '%s'", llmOutput));
+    }
+
+    private record ParsedOutput(
+            String type, String answer, String reason, String action, String actionInputStr, String message
+    ) {
     }
 }
