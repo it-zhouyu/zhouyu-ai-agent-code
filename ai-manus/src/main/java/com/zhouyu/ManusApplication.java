@@ -20,7 +20,10 @@ public class ManusApplication {
         ManusAgent manusAgent = new ManusAgent(openAIClient);
 
         String prompt = """
-                搜索阿里巴巴最新股价，并写入到文件中。
+                1. 创建一个名为'test_page.html'的HTML文件并添加内容
+                2. 使用file://协议在浏览器中打开本地文件
+                3. 给打开的页面截图
+                4. 告诉截图中的内容
                 """;
         manusAgent.run(prompt);
 

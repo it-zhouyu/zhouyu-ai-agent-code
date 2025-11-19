@@ -2,10 +2,7 @@ package com.zhouyu.agent;
 
 import com.zhouyu.model.OpenAIClient;
 import com.zhouyu.tools.ToolCollection;
-import com.zhouyu.tools.impl.FileReaderTool;
-import com.zhouyu.tools.impl.FileWriterTool;
-import com.zhouyu.tools.impl.SandboxTool;
-import com.zhouyu.tools.impl.TavilySearchTool;
+import com.zhouyu.tools.impl.*;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -42,6 +39,7 @@ public class ManusAgent extends ToolCallAgent {
         toolCollection.addTool(new FileReaderTool());
         toolCollection.addTool(new SandboxTool());
         toolCollection.addTool(new TavilySearchTool());
+        toolCollection.addTool(new BrowserTool());
         this.toolCollection = toolCollection;
 
         // 如果工作区目录不存在则创建
