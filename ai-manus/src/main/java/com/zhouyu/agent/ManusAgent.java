@@ -70,5 +70,6 @@ public class ManusAgent extends ToolCallAgent {
 
     public void setRelevanceFilter(RelevanceFilter relevanceFilter) {
         memory.setRelevanceFilter(relevanceFilter);
+        toolCollection.setRelevanceFilter(relevanceFilter);
     }
 }

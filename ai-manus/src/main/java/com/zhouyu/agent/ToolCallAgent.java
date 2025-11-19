@@ -40,7 +40,8 @@ public class ToolCallAgent extends BaseAgent {
 //        List<Message> contextMessages = memory.getMessages();
         List<Message> contextMessages = memory.getMessages(currentQuery);
 
-        List<ToolDefinition> toolDefinitions = toolCollection.getToolDefinitions();
+//        List<ToolDefinition> toolDefinitions = toolCollection.getToolDefinitions();
+        List<ToolDefinition> toolDefinitions = toolCollection.getRelevantToolDefinitions(currentQuery);
 
         ModelResponse modelResponse = openAIClient.chat(contextMessages, toolDefinitions);
 
