@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>java-react-agent</module>
+        <module>ai-manus</module>
     </modules>
 
     <properties>
