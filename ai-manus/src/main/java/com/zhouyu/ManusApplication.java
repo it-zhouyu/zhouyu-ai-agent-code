@@ -20,9 +20,10 @@ public class ManusApplication {
         ManusAgent manusAgent = new ManusAgent(openAIClient);
 
         String prompt = """
-                写一个简单的计算前10个斐波那契数的Python脚本，然后脚本的执行结果保存到名为'fibonacci.txt'的文件中
+                搜索阿里巴巴最新股价，并写入到文件中。
                 """;
         manusAgent.run(prompt);
+
 
         System.exit(0);
     }

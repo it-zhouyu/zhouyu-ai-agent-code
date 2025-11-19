@@ -74,6 +74,13 @@
             <artifactId>httpclient5</artifactId>
             <version>5.0.3</version>
         </dependency>
+
+        <!-- Tavily Search -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-web-search-engine-tavily</artifactId>
+            <version>0.36.2</version>
+        </dependency>
     </dependencies>
 
     <build>
