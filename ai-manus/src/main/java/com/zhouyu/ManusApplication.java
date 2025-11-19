@@ -20,7 +20,7 @@ public class ManusApplication {
         ManusAgent manusAgent = new ManusAgent(openAIClient);
 
         String prompt = """
-                请帮我用HTML、CSS、JS创建一个简单的贪吃蛇游戏，分成三个文件，分别是snake.html、snake.css、snake.js
+                写一个简单的计算前10个斐波那契数的Python脚本，然后脚本的执行结果保存到名为'fibonacci.txt'的文件中
                 """;
         manusAgent.run(prompt);
 

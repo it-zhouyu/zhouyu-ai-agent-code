@@ -4,6 +4,7 @@ import com.zhouyu.model.OpenAIClient;
 import com.zhouyu.tools.ToolCollection;
 import com.zhouyu.tools.impl.FileReaderTool;
 import com.zhouyu.tools.impl.FileWriterTool;
+import com.zhouyu.tools.impl.SandboxTool;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -26,6 +27,8 @@ public class ManusAgent extends ToolCallAgent {
             
             ## 规则
             - 工作目录：{workspace}
+            - Sandbox里面不使用工作目录
+            - 利用Sandbox执行代码时，直接把代码内容传给Sandbox，而不是把代码脚本文件传给Sandbox
             - 一次只能执行一个工具
         
             """;
@@ -36,6 +39,7 @@ public class ManusAgent extends ToolCallAgent {
         ToolCollection toolCollection = new ToolCollection();
         toolCollection.addTool(new FileWriterTool());
         toolCollection.addTool(new FileReaderTool());
+        toolCollection.addTool(new SandboxTool());
         this.toolCollection = toolCollection;
 
         // 如果工作区目录不存在则创建
