@@ -1,6 +1,7 @@
 package com.zhouyu;
 
 import com.zhouyu.agent.ManusAgent;
+import com.zhouyu.model.LLMRelevanceFilter;
 import com.zhouyu.model.ModelConfig;
 import com.zhouyu.model.OpenAIClient;
 
@@ -18,6 +19,7 @@ public class ManusApplication {
                 .build());
 
         ManusAgent manusAgent = new ManusAgent(openAIClient);
+        manusAgent.setRelevanceFilter(new LLMRelevanceFilter(openAIClient));
 
         String prompt = """
                 1. 创建一个名为'test_page.html'的HTML文件并添加内容

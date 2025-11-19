@@ -16,6 +16,9 @@ import java.util.List;
 public class Memory {
 
     private List<Message> messages;
+    private RelevanceFilter relevanceFilter;
+
+    // 相关性过滤
 
     public Memory() {
         this.messages = new ArrayList<>();
@@ -23,5 +26,12 @@ public class Memory {
 
     public void addMessage(Message message) {
         messages.add(message);
+    }
+
+    public List<Message> getMessages(String currentQuery) {
+        if (relevanceFilter != null) {
+            return relevanceFilter.filter(messages, currentQuery, 5);
+        }
+        return messages;
     }
 }

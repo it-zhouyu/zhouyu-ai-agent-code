@@ -1,6 +1,7 @@
 package com.zhouyu.agent;
 
 import com.zhouyu.model.OpenAIClient;
+import com.zhouyu.model.RelevanceFilter;
 import com.zhouyu.tools.ToolCollection;
 import com.zhouyu.tools.impl.*;
 import org.slf4j.Logger;
@@ -67,4 +68,7 @@ public class ManusAgent extends ToolCallAgent {
         return Paths.get("").toAbsolutePath();
     }
 
+    public void setRelevanceFilter(RelevanceFilter relevanceFilter) {
+        memory.setRelevanceFilter(relevanceFilter);
+    }
 }

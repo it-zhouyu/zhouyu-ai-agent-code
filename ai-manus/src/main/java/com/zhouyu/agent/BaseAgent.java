@@ -35,7 +35,7 @@ public abstract class BaseAgent {
         // 达到最大步数就退出
         while (currentStep < maxStep) {
 
-            StepResult stepResult = step();
+            StepResult stepResult = step(prompt);
             allStepResult.append(stepResult.output).append("/n");
 
             // 不继续了就退出
@@ -49,7 +49,7 @@ public abstract class BaseAgent {
         return allStepResult.toString();
     }
 
-    protected abstract StepResult step();
+    protected abstract StepResult step(String currentQuery);
 
     @Data
     @Builder

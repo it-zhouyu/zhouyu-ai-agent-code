@@ -35,9 +35,11 @@ public class ToolCallAgent extends BaseAgent {
     }
 
     @Override
-    protected StepResult step() {
+    protected StepResult step(String currentQuery) {
 
-        List<Message> contextMessages = memory.getMessages();
+//        List<Message> contextMessages = memory.getMessages();
+        List<Message> contextMessages = memory.getMessages(currentQuery);
+
         List<ToolDefinition> toolDefinitions = toolCollection.getToolDefinitions();
 
         ModelResponse modelResponse = openAIClient.chat(contextMessages, toolDefinitions);

@@ -1,26 +1,20 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>测试页面</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            line-height: 1.6;
-        }
-        h1 {
-            color: #333;
-        }
-        p {
-            color: #666;
-        }
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f0f0f0; }
+        h1 { color: #333; }
+        p { color: #666; }
     </style>
 </head>
 <body>
-    <h1>这是一个测试页面</h1>
-    <p>这个HTML页面是用于测试浏览器功能的。</p>
-    <p>你可以看到这段文字说明页面已经成功加载。</p>
+    <h1>欢迎来到测试页面</h1>
+    <p>这是一个用于测试的简单HTML页面。</p>
+    <p>当前时间: <span id="current-time">加载中...</span></p>
+    <script>
+        document.getElementById('current-time').textContent = new Date().toLocaleString();
+    </script>
 </body>
 </html>
