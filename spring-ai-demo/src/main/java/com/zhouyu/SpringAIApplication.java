@@ -1,6 +1,9 @@
 package com.zhouyu;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +19,14 @@ public class SpringAIApplication {
     @Bean
     public ChatClient chatClient(ChatClient.Builder chatClientBuilder) {
         return chatClientBuilder.build();
+    }
+
+    @Bean
+    public ChatMemory chatMemory() {
+        InMemoryChatMemoryRepository inMemoryChatMemoryRepository = new InMemoryChatMemoryRepository();
+        return MessageWindowChatMemory.builder()
+                .chatMemoryRepository(inMemoryChatMemoryRepository)
+                .build();
     }
 
     public static void main(String[] args) {
