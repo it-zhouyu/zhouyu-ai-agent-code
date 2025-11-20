@@ -1,0 +1,13 @@
+spring:
+  ai:
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      #      base-url: https://api.deepseek.com   # 如果使用DeepSeek则设置这个base-url
+      api-key: ${DASHSCOPE_API_KEY}
+      chat:
+        options:
+          model: qwen3-max
+
+
+server:
+  port: 8081
