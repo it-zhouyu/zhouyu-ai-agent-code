@@ -3,6 +3,10 @@ spring:
     url: jdbc:mysql://127.0.0.1:3306/my_db?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&allowMultiQueries=true&allowPublicKeyRetrieval=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
     username: root
     password: Zhouyu123456...
+  elasticsearch:
+    uris: 127.0.0.1:9200
+    username: elastic
+    password: Q2i6oixj5uF=UL8yq7z1
   ai:
     openai:
       base-url: https://dashscope.aliyuncs.com/compatible-mode
@@ -11,6 +15,15 @@ spring:
       chat:
         options:
           model: qwen3-max
+      embedding:
+        options:
+          model: text-embedding-v4
+    vectorstore:
+      elasticsearch:
+        initialize-schema: true
+        index-name: spring-ai-demo-index
+        dimensions: 1024
+        similarity: cosine
     chat:
       memory:
         repository:

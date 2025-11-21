@@ -8,10 +8,18 @@ import org.springframework.ai.chat.client.advisor.api.CallAdvisor;
 import org.springframework.ai.chat.client.advisor.api.CallAdvisorChain;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.reader.TextReader;
+import org.springframework.ai.transformer.splitter.TextSplitter;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -24,6 +32,7 @@ import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,7 +47,13 @@ public class ZhouyuController {
     private ChatClient chatClient;
 
     @Autowired
+    private EmbeddingModel embeddingModel;
+
+    @Autowired
     private ChatMemory chatMemory;
+
+    @Autowired
+    private VectorStore vectorStore;
 
     @GetMapping("/chat")
     public String chat(String question) {
@@ -130,6 +145,60 @@ public class ZhouyuController {
         return chatClient.prompt(prompt).call().entity(Poem.class);
     }
 
+    @GetMapping("/embedding")
+    public float[] embedding(String question) {
+        return embeddingModel.embed(question);
+    }
+
+    @Value("classpath:qa.txt")
+    private org.springframework.core.io.Resource resource;
+
+    @GetMapping("/store")
+    public List<Document> store() {
+        TextReader textReader = new TextReader(resource);
+        List<Document> documents = textReader.get();
+
+        ZhouyuTextSplitter zhouyuTextSplitter = new ZhouyuTextSplitter();
+        List<Document> list = zhouyuTextSplitter.apply(documents);
+
+//        for (Document document : list) {
+//            document.getMetadata().put("author", "zhouyu");
+//            document.getMetadata().put("article_type", "blog");
+//        }
+
+        vectorStore.add(list);
+
+        return list;
+    }
+
+    @GetMapping("/search")
+    public List<Document> search(String question) {
+        SearchRequest searchRequest = SearchRequest
+                .builder()
+                .query(question)
+                .topK(2)
+                .similarityThreshold(0.6)
+//                .filterExpression("author in ['zhouyu', 'jill'] && 'article_type' == 'blog'")
+                .build();
+        return vectorStore.similaritySearch(searchRequest);
+    }
+
+    @GetMapping("/ragChat")
+    public String ragChat(String question) {
+
+        // 向量搜索
+        List<Document> documentList = search(question);
+
+        // 提示词模板
+        PromptTemplate promptTemplate = new PromptTemplate("{question}\n\n 用以下信息回答问题:\n {contents}");
+
+        // 组装提示词
+        Prompt prompt = promptTemplate.create(Map.of("question", question, "contents", documentList));
+
+        // 调用大模型
+        return chatClient.prompt(prompt).call().content();
+    }
+
     static class Poem {
         private String title;
         private String author;
@@ -186,6 +255,17 @@ public class ZhouyuController {
         public int getOrder() {
             // 数字越小，越先执行，升序排序
             return 0;
+        }
+    }
+
+    static class ZhouyuTextSplitter extends TextSplitter {
+        @Override
+        protected List<String> splitText(String text) {
+            return List.of(split(text));
+        }
+
+        public String[] split(String text) {
+            return text.split("\\s*\\R\\s*\\R\\s*");
         }
     }
 }
