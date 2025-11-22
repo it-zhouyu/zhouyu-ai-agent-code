@@ -14,6 +14,15 @@ import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
+import org.springframework.ai.rag.generation.augmentation.QueryAugmenter;
+import org.springframework.ai.rag.preretrieval.query.expansion.MultiQueryExpander;
+import org.springframework.ai.rag.preretrieval.query.transformation.CompressionQueryTransformer;
+import org.springframework.ai.rag.retrieval.join.ConcatenationDocumentJoiner;
+import org.springframework.ai.rag.retrieval.join.DocumentJoiner;
+import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.reader.TextReader;
 import org.springframework.ai.transformer.splitter.TextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -197,6 +206,71 @@ public class ZhouyuController {
 
         // 调用大模型
         return chatClient.prompt(prompt).call().content();
+    }
+
+    @GetMapping("/ragAdvisor")
+    public String ragAdvisor(String question) {
+
+        // vectorStore 向量
+        // chatMemory  聊天记录
+
+        VectorStoreDocumentRetriever documentRetriever = VectorStoreDocumentRetriever.builder()
+                .similarityThreshold(0.50)
+                .vectorStore(vectorStore)
+                .topK(3)
+                .build();
+
+        RetrievalAugmentationAdvisor retrievalAugmentationAdvisor = RetrievalAugmentationAdvisor.builder()
+                .documentRetriever(documentRetriever)
+                .build();
+
+        return chatClient.prompt()
+                .advisors(retrievalAugmentationAdvisor)
+                .user(question)
+                .call()
+                .content();
+    }
+
+    @Autowired
+    private ChatClient.Builder chatClientBuilder;
+
+    @GetMapping("/ragAdvisor2")
+    public String ragAdvisor2(@RequestParam("chatId") String chatId, @RequestParam("question") String question) {
+
+        // 将用户问题和聊天记录进行压缩  大模型 Qwen
+        CompressionQueryTransformer queryTransformer = CompressionQueryTransformer.builder().chatClientBuilder(chatClientBuilder).build();
+
+        // 将用户问题扩写为多个问题
+        MultiQueryExpander queryExpander = MultiQueryExpander.builder().chatClientBuilder(chatClientBuilder).build();
+
+        // 从向量数据库中进行语义相似度查询
+        DocumentRetriever documentRetriever = VectorStoreDocumentRetriever.builder()
+                .vectorStore(vectorStore)
+                .similarityThreshold(0.5)
+                .topK(3)
+                .build();
+
+        // 对多个Document进行合并
+        DocumentJoiner documentJoiner = new ConcatenationDocumentJoiner();
+
+        // 增强查询，基于用户问题和检索结果进行增强查询
+        QueryAugmenter queryAugmenter = ContextualQueryAugmenter.builder().build();
+
+        RetrievalAugmentationAdvisor retrievalAugmentationAdvisor = RetrievalAugmentationAdvisor.builder()
+                .queryTransformers(queryTransformer)
+                .queryExpander(queryExpander)
+                .documentRetriever(documentRetriever)
+                .documentJoiner(documentJoiner)
+                .queryAugmenter(queryAugmenter)
+                .build();
+
+        return chatClient
+                .prompt()
+                .advisors(MessageChatMemoryAdvisor.builder(chatMemory).build(), retrievalAugmentationAdvisor)
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, chatId))
+                .user(question)
+                .call()
+                .content();
     }
 
     static class Poem {
