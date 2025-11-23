@@ -6,6 +6,7 @@ import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.api.CallAdvisor;
 import org.springframework.ai.chat.client.advisor.api.CallAdvisorChain;
+import org.springframework.ai.chat.evaluation.RelevancyEvaluator;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.model.ChatModel;
@@ -14,6 +15,8 @@ import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.evaluation.EvaluationRequest;
+import org.springframework.ai.evaluation.EvaluationResponse;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
 import org.springframework.ai.rag.generation.augmentation.QueryAugmenter;
@@ -271,6 +274,28 @@ public class ZhouyuController {
                 .user(question)
                 .call()
                 .content();
+    }
+
+    @GetMapping("/evaluation")
+    public EvaluationResponse evaluation(String question) {
+        // RAG
+        SearchRequest searchRequest = SearchRequest
+                .builder()
+                .query(question)
+                .topK(1)
+                .similarityThreshold(0.1)
+                .build();
+        List<Document> documents = vectorStore.similaritySearch(searchRequest);
+        PromptTemplate promptTemplate = new PromptTemplate("{question}\n\n 用以下信息回答问题:\n {contents}");
+        String prompt = promptTemplate.render(Map.of("question", question, "contents", documents));
+//        String ragResult = chatClient.prompt(prompt).call().content();
+
+         String ragResult = "我是周瑜";
+
+        // 评估器（可以换成另外一个模型）, 评估是否产生了幻觉
+        RelevancyEvaluator relevancyEvaluator = new RelevancyEvaluator(chatClientBuilder);
+        EvaluationRequest evaluationRequest = new EvaluationRequest(question, documents, ragResult);
+        return relevancyEvaluator.evaluate(evaluationRequest);
     }
 
     static class Poem {
