@@ -1,10 +1,15 @@
 package com.zhouyu;
 
+import io.modelcontextprotocol.client.McpSyncClient;
+import io.modelcontextprotocol.spec.McpSchema;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * 作者：IT周瑜
@@ -20,6 +25,9 @@ public class McpController {
     @Autowired
     private ToolCallbackProvider toolCallbackProvider;
 
+    @Autowired
+    private List<McpSyncClient> mcpSyncClients;
+
     // tool/list--->工具list
     // toolcall
     // tool/call
@@ -32,5 +40,29 @@ public class McpController {
                 .toolCallbacks(toolCallbackProvider.getToolCallbacks())
                 .call()
                 .content();
+    }
+
+    @GetMapping("/mcpPrompt")
+    public String mcpPrompt(String question) {
+        McpSyncClient mcpSyncClient = mcpSyncClients.get(0);
+        McpSchema.ListPromptsResult listPromptsResult = mcpSyncClient.listPrompts();
+        List<McpSchema.Prompt> prompts = listPromptsResult.prompts();
+        McpSchema.Prompt prompt = prompts.get(0);
+        return prompt.toString();
+
+
+//        McpSchema.GetPromptRequest getPromptRequest = new McpSchema.GetPromptRequest("greeting", Map.of("name", "周瑜"), null);
+//        McpSchema.GetPromptResult prompt = mcpSyncClient.getPrompt(getPromptRequest);
+//        return ((McpSchema.TextContent)prompt.messages().get(0).content()).text();
+    }
+
+    @GetMapping("/mcpResource")
+    public String mcpResource(String question) {
+        McpSyncClient mcpSyncClient = mcpSyncClients.get(0);
+
+        McpSchema.ReadResourceRequest readResourceRequest = new McpSchema.ReadResourceRequest("config://username");
+        McpSchema.ReadResourceResult readResourceResult = mcpSyncClient.readResource(readResourceRequest);
+        McpSchema.ResourceContents resourceContents = readResourceResult.contents().get(0);
+        return ((McpSchema.TextResourceContents)resourceContents).text();
     }
 }
