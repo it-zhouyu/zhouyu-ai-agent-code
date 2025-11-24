@@ -18,6 +18,7 @@
         <module>java-react-agent</module>
         <module>ai-manus</module>
         <module>spring-ai-demo</module>
+        <module>spring-ai-mcp-server-demo</module>
     </modules>
 
     <properties>

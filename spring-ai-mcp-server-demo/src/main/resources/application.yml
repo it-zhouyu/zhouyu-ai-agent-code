@@ -1,0 +1,26 @@
+#spring:
+#  main:
+#    web-application-type: none
+#    banner-mode: off
+#  ai:
+#    mcp:
+#      server:
+#        name: stdio-mcp-server-demo
+#        version: 1.0.0
+#
+#logging:
+#  pattern:
+#    console:
+#  file:
+#    name: /Users/dadudu/idea/java/vip/zhouyu-ai-agent-vip/spring-ai-mcp-server-demo/spring-ai-mcp-server.demo.log
+
+spring:
+  ai:
+    mcp:
+      server:
+        name: streamable-mcp-server-demo
+        version: 1.0.0
+        protocol: streamable
+
+server:
+  port: 8081
