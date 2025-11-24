@@ -29,6 +29,13 @@ spring:
         repository:
           jdbc:
             initialize-schema: always
+    mcp:
+      client:
+        name: spring-ai-mcp-client-demo
+        streamable-http:
+          connections:
+            server1:
+              url: http://localhost:8082
 
 server:
   port: 8081
