@@ -20,6 +20,7 @@
         <module>spring-ai-demo</module>
         <module>spring-ai-mcp-server-demo</module>
         <module>ai-weekly-report</module>
+        <module>spring-ai-alibaba-demo</module>
     </modules>
 
     <properties>
