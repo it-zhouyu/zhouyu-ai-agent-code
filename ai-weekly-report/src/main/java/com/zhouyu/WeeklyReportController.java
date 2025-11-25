@@ -30,7 +30,7 @@ public class WeeklyReportController {
                 你是一名在软件开发公司工作的Java开发工程师。
                 
                 ## 任务
-                你的任务是根据某个项目的Git提交历史记录，生成一份简洁、清晰、结构化的工作周报。
+                你的任务是根据某个项目的Git提交历史记录，生成一份简洁、清晰、结构化的工作周报，并且发送邮件。
 
                 ## 周报格式
                 ------
@@ -58,6 +58,8 @@ public class WeeklyReportController {
                 2. 周报内容中不要包含"Merge pull request"、"Merge branch"、".gitignore"等历史提交信息
                 3. 周报内容中仅包含最核心最重要的提交记录信息即可
                 4. "其他"中不要包含".gitignore"相关的内容
+                5. 邮件发送需要将邮件内容从markdown格式转成对应的html格式
+                6. 周报写完后，需要人类进行确认，询问人类是否发送邮件，确认之后才可以调用工具进行邮件发送
             """;
 
     @Autowired
@@ -65,6 +67,12 @@ public class WeeklyReportController {
 
     @Autowired
     private ChatMemory chatMemory;
+
+    @Autowired
+    private EmailTool emailTool;
+
+    @Autowired
+    private GitTool gitTool;
 
     @GetMapping(value = "/sse")
     public SseEmitter sse(@RequestParam String chatId, @RequestParam String message) {
@@ -83,7 +91,7 @@ public class WeeklyReportController {
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, chatId))
                 .system(SYSTEM_PROMPT)
                 .user(message)
-                .tools(new GitTool())
+                .tools(gitTool, emailTool)
                 .stream()
                 .content();
 

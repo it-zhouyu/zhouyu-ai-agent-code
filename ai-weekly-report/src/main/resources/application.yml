@@ -7,5 +7,25 @@ spring:
       chat:
         options:
           model: qwen3-max
+  mail:
+    host: smtp.qq.com
+    port: 465
+    username: 497269678@qq.com
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        host: smtp.qq.com
+        transport:
+          protocol: smtp
+        smtp:
+          auth: true
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+            port: 465
+          port: 465
+
 server:
   port: 8081
+
+
+toEmail: a497269678@qq.com
