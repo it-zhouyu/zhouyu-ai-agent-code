@@ -26,7 +26,7 @@ import java.util.stream.Stream;
  * 公众号：IT周瑜
  * 微信号：it_zhouyu
  */
-@Component
+//@Component
 @Log4j2
 public class DepartmentSummaryVectorStoreJob {
 
