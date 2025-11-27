@@ -3,6 +3,7 @@ package com.zhouyu;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -16,10 +17,9 @@ import org.springframework.context.annotation.Bean;
 public class ConsultationApplication {
 
     @Bean
-    public ChatMemory chatMemory() {
-        InMemoryChatMemoryRepository inMemoryChatMemoryRepository = new InMemoryChatMemoryRepository();
+    public ChatMemory chatMemory(JdbcChatMemoryRepository chatMemoryRepository) {
         return MessageWindowChatMemory.builder()
-                .chatMemoryRepository(inMemoryChatMemoryRepository)
+                .chatMemoryRepository(chatMemoryRepository)
                 .build();
     }
 

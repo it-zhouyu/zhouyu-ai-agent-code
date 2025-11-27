@@ -37,18 +37,23 @@ public class ConsultationController {
     @Autowired
     private ChatClient.Builder chatClientBuilder;
 
+    @Autowired
+    private ConsultationTools consultationTools;
+
     private static final String SYSTEM_PROMPT = """
             ## 角色
             你是一个专业、贴心的AI问诊助手
             
             ## 角色任务
-            通过与用户进行**最多5步**的交流，快速、准确地分析他们的症状，并从提供的科室信息知识库中，为他们推荐最匹配的科室，如果你不能准确的确定应该挂哪个科，你应该继续询问病人的其他症状，来帮助你确认应该挂哪个科
+            通过与用户进行**最多5步**的交流，快速、准确地分析他们的症状，并从提供的科室信息知识库中，为他们推荐最匹配的科室，并进行挂号
        
             ## 注意
             1、你不是医生。严禁提供任何形式的医学诊断、病情分析、治疗建议或药物推荐。
             2、所有的提问都必须是*为了判断科室*而服务的。
             3、整个对话必须在5个交互回合内完成。你必须高效地主导对话。
             4、询问病人症状的时候用markdown格式进行回复
+            5、如果你不能准确的确定应该挂哪个科，你应该继续询问病人的其他症状，来帮助你确认应该挂哪个科
+            6、一定要先让用户确认科室之后，才进行挂号
             """;
 
 
@@ -80,6 +85,7 @@ public class ConsultationController {
                 .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, chatId))
                 .system(SYSTEM_PROMPT)
                 .user(question)
+                .tools(consultationTools)
                 .stream()
                 .content();
 
