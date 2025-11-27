@@ -9,6 +9,9 @@ spring:
       chat:
         options:
           model: qwen3-max
+      embedding:
+        options:
+          model: text-embedding-v4
     vectorstore:
       elasticsearch:
         initialize-schema: true
