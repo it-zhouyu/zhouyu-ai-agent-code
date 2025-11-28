@@ -55,14 +55,30 @@ public class ReActAgent {
             {tools}
             
             ## 规则
-            - Action中只需要返回toolName
-            - 千万不要自己生成**Observation: **相关的内容
+            - Action中只需要返回工具的名字，比如writeFile，不要返回以下格式toolName=writeFile
+            - 每次只做一次Reason/Action/ActionInput或者FinalAnswer的输出过程，不要一次性都做了
+            - 每次返回的过程中不要自己生成Observation的内容
+            - 返回Reason/Action/ActionInput的时候不要生成并返回Observation的内容
             
-            ## 输出格式
+            ## 输出过程参考
+            第一轮
             Reason: 你思考的过程
             Action: 你的下一步动作，你想要执行的工具是哪个，必须是{tools}中的一个
             ActionInput: 你要调用的工具的输入参数是什么
+            
+            第二轮
+            Reason: 你思考的过程
+            Action: 你的下一步动作，你想要执行的工具是哪个，必须是{tools}中的一个
+            ActionInput: 你要调用的工具的输入参数是什么
+            
+            第三轮
+            Reason: 你思考的过程
+            Action: 你的下一步动作，你想要执行的工具是哪个，必须是{tools}中的一个
+            ActionInput: 你要调用的工具的输入参数是什么
+            
             ...
+            
+            最后一轮
             FinalAnswer: 表示最终的答案，只需要最后输出就可以了
             
             
@@ -116,6 +132,7 @@ public class ReActAgent {
                         .append("ActionInput: ").append(parsedOutput.actionInputStr).append("\n")
                         .append("Observation: ").append(observation).append("\n");
             } catch (Exception e) {
+                e.printStackTrace();
                 i++;
             }
         }
