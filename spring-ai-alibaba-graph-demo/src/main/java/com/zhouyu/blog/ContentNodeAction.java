@@ -4,6 +4,8 @@ import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.action.NodeAction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatResponse;
+import reactor.core.publisher.Flux;
 
 import java.util.Map;
 
@@ -24,15 +26,16 @@ public class ContentNodeAction implements NodeAction {
     @Override
     public Map<String, Object> apply(OverAllState state) throws Exception {
         // 获取输入
-        String title = state.value("title", String.class).orElseThrow();
+//        String title = state.value("title", String.class).orElse("");
+        Object title = state.value("title").orElseThrow();
 
         log.info("title: {}", title);
 
-        String content = chatClient.prompt()
+        Flux<ChatResponse> content = chatClient.prompt()
                 .system("给指定主题生成一篇爆款文章, 内容要简短")
                 .user("主题：" + title)
-                .call()
-                .content();
+                .stream()
+                .chatResponse();
 
         return Map.of("content", content);
     }
