@@ -22,6 +22,7 @@
         <module>ai-weekly-report</module>
         <module>spring-ai-alibaba-demo</module>
         <module>ai-consultation</module>
+        <module>spring-ai-alibaba-graph-demo</module>
     </modules>
 
     <properties>
