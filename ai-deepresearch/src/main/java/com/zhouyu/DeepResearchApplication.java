@@ -9,6 +9,7 @@ import com.alibaba.cloud.ai.graph.action.EdgeAction;
 import com.alibaba.cloud.ai.graph.exception.GraphStateException;
 import com.zhouyu.node.CoordinatorNode;
 import com.zhouyu.node.PlannerNode;
+import com.zhouyu.node.ReporterNode;
 import com.zhouyu.node.ResearcherNode;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -42,6 +43,7 @@ public class DeepResearchApplication {
         stateGraph.addNode("coordinatorNode", node_async(new CoordinatorNode(chatClientBuilder.build())));
         stateGraph.addNode("plannerNode", node_async(new PlannerNode(chatClientBuilder.build())));
         stateGraph.addNode("researcherNode", node_async(new ResearcherNode(chatClientBuilder.build())));
+        stateGraph.addNode("reporterNode", node_async(new ReporterNode(chatClientBuilder.build())));
 
         stateGraph.addEdge(START, "coordinatorNode")
                 .addConditionalEdges("coordinatorNode", AsyncEdgeAction.edge_async(state -> {
@@ -49,7 +51,8 @@ public class DeepResearchApplication {
                     return coordinatorResult.getText().equals("NEED_PLAN") ? "plannerNode" : END;
                 }), Map.of("plannerNode", "plannerNode", END, END))
                 .addEdge("plannerNode", "researcherNode")
-                .addEdge("researcherNode", END);
+                .addEdge("researcherNode", "reporterNode")
+                .addEdge("reporterNode", END);
 
         return stateGraph.compile();
     }
