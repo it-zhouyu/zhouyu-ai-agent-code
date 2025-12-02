@@ -41,14 +41,14 @@ public class DeepResearchController {
         return outputFlux.map(output -> {
             log.info("output: {}", output);
             if (output instanceof StreamingOutput<?> streamingOutput) {
-                if (streamingOutput.message() != null) {
+                if (streamingOutput.message() != null && !streamingOutput.node().equals("coordinatorNode")) {
                     return streamingOutput.message().getText();
                 }
             }
             return "";
         });
     }
-//
+
 //    @GetMapping(value = "/sse")
 //    public SseEmitter sse(String input) {
 //        SseEmitter sseEmitter = new SseEmitter(300000L) {

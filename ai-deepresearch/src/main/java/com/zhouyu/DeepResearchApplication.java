@@ -1,14 +1,21 @@
 package com.zhouyu;
 
 import com.alibaba.cloud.ai.graph.CompiledGraph;
+import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.StateGraph;
+import com.alibaba.cloud.ai.graph.action.AsyncEdgeAction;
 import com.alibaba.cloud.ai.graph.action.AsyncNodeAction;
+import com.alibaba.cloud.ai.graph.action.EdgeAction;
 import com.alibaba.cloud.ai.graph.exception.GraphStateException;
 import com.zhouyu.node.CoordinatorNode;
+import com.zhouyu.node.PlannerNode;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+
+import java.util.Map;
 
 import static com.alibaba.cloud.ai.graph.StateGraph.END;
 import static com.alibaba.cloud.ai.graph.StateGraph.START;
@@ -32,9 +39,14 @@ public class DeepResearchApplication {
 
         StateGraph stateGraph = new StateGraph();
         stateGraph.addNode("coordinatorNode", node_async(new CoordinatorNode(chatClientBuilder.build())));
+        stateGraph.addNode("plannerNode", node_async(new PlannerNode(chatClientBuilder.build())));
 
         stateGraph.addEdge(START, "coordinatorNode")
-                .addEdge("coordinatorNode", END);
+                .addConditionalEdges("coordinatorNode", AsyncEdgeAction.edge_async(state -> {
+                    AssistantMessage coordinatorResult = (AssistantMessage)state.value("coordinatorResult").orElseThrow();
+                    return coordinatorResult.getText().equals("NEED_PLAN") ? "plannerNode" : END;
+                }), Map.of("plannerNode", "plannerNode", END, END))
+                .addEdge("plannerNode", END);
 
         return stateGraph.compile();
     }
