@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executors;
 
 /**
  * 作者：IT周瑜
@@ -43,6 +44,12 @@ public class GraphController {
 
     @Autowired
     private CompiledGraph interruptStateGraph;
+
+    @Autowired
+    private CompiledGraph parallelExecutorStateGraph;
+
+    @Autowired
+    private CompiledGraph subStateGraph;
 
     @GetMapping("/simple")
     public Map<String, Object> simple(String subject) {
@@ -188,5 +195,22 @@ public class GraphController {
             }
             return "";
         });
+    }
+
+    @GetMapping("/parallel")
+    public Map<String, Object> parallel() {
+
+        RunnableConfig runnableConfig = RunnableConfig.builder().addParallelNodeExecutor("a", Executors.newFixedThreadPool(10)).build();
+
+        Optional<OverAllState> overAllState = parallelExecutorStateGraph.invoke(Map.of(), runnableConfig);
+        OverAllState state = overAllState.orElseThrow();
+        return state.data();
+    }
+
+    @GetMapping("/subGraph")
+    public Map<String, Object> subGraph() {
+        Optional<OverAllState> overAllState = subStateGraph.invoke(Map.of());
+        OverAllState state = overAllState.orElseThrow();
+        return state.data();
     }
 }

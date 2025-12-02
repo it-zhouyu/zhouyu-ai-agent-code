@@ -332,4 +332,79 @@ public class GraphConfig {
 
         return compiledGraph;
     }
+
+    @Bean("parallelExecutorStateGraph")
+    public CompiledGraph parallelExecutorStateGraph() throws GraphStateException {
+
+        NodeAction a = state -> Map.of();
+
+        NodeAction b = state -> {
+            System.out.println(Thread.currentThread().getName());
+            System.out.println("开始执行 b");
+            Thread.sleep(2000);
+            System.out.println("结束执行 b");
+            return Map.of("b_complete", true);
+        };
+
+        NodeAction c = state -> {
+            System.out.println(Thread.currentThread().getName());
+            System.out.println("开始执行 c");
+            Thread.sleep(5000);
+            System.out.println("结束执行 c");
+            return Map.of("c_complete", true);
+        };
+
+        NodeAction d = state -> {
+            Boolean bComplete = state.value("b_complete", false);
+            Boolean cComplete = state.value("c_complete", false);
+            if (bComplete && cComplete) {
+                return Map.of("next_node", END);
+            }
+            return Map.of("next_node", "a");
+        };
+
+        StateGraph stateGraph = new StateGraph()
+                .addNode("a", node_async(a))
+                .addNode("b", node_async(b))
+                .addNode("c", node_async(c))
+                .addNode("d", node_async(d))
+
+                .addEdge(START, "a")
+                .addEdge("a", "b").addEdge("b", "d")
+                .addEdge("a", "c").addEdge("c", "d")
+                .addConditionalEdges("d", edge_async(state -> state.value("next_node", END)), Map.of("a", "a", END, END));
+
+        CompiledGraph compiledGraph = stateGraph.compile();
+        GraphRepresentation representation = compiledGraph.getGraph(GraphRepresentation.Type.MERMAID);
+        System.out.println(representation.content());
+        return compiledGraph;
+    }
+
+    @Bean("subStateGraph")
+    public CompiledGraph subStateGraph() throws GraphStateException {
+        KeyStrategyFactory keyStrategyFactory = () -> {
+            Map<String, KeyStrategy> keyStrategyMap = new HashMap<>();
+            keyStrategyMap.put("ids", KeyStrategy.MERGE);
+            return keyStrategyMap;
+        };
+
+        var workflowChild = new StateGraph(keyStrategyFactory)
+                .addNode("B1", node_async(state -> Map.of("ids", Map.of("b1", "B1"))))
+                .addNode("B2", node_async(state -> Map.of("ids", Map.of("b2", "B2"))))
+                .addEdge(START, "B1")
+                .addEdge("B1", "B2")
+                .addEdge("B2", END);
+
+        var workflowParent = new StateGraph(keyStrategyFactory)
+                .addNode("A", node_async(state -> Map.of("ids", Map.of("a", "A"))))
+                .addNode("B", workflowChild)
+                .addNode("C", node_async(state -> Map.of("ids", Map.of("c", "C"))))
+
+                .addEdge(START, "A")
+                .addEdge("A", "B")
+                .addEdge("B", "C")
+                .addEdge("C", END);
+
+        return workflowParent.compile();
+    }
 }
