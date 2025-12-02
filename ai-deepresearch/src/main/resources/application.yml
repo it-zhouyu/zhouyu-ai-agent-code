@@ -5,5 +5,9 @@ spring:
       chat:
         options:
           model: qwen3-max
+    alibaba:
+      toolcalling:
+        tavilysearch:
+          api-key: ${TAVILY_API_KEY}
 server:
   port: 8081
