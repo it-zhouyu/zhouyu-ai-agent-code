@@ -12,6 +12,7 @@ import com.alibaba.cloud.ai.graph.store.StoreItem;
 import com.alibaba.cloud.ai.graph.store.stores.MemoryStore;
 import com.zhouyu.blog.ContentNodeAction;
 import com.zhouyu.blog.TitleNodeAction;
+import com.zhouyu.interrupt.InterruptableNodeAction;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -20,8 +21,10 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import reactor.core.publisher.Flux;
 
 import java.util.*;
 
@@ -222,4 +225,111 @@ public class GraphConfig {
     }
 
 
+    @Bean
+    public CompiledGraph interruptBeforeStateGraph(ChatClient.Builder chatClientBuilder, MemorySaver memorySaver) throws GraphStateException {
+
+        ChatClient chatClient = chatClientBuilder.build();
+
+        // 定义普通节点
+        var node1 = node_async(state -> {
+            Flux<ChatResponse> chatResponseFlux = chatClient.prompt("直接返回“我是节点1”")
+                    .stream()
+                    .chatResponse();
+            return Map.of("node1Result", chatResponseFlux);
+        });
+
+        var node2 = node_async(state -> {
+            Flux<ChatResponse> chatResponseFlux = chatClient.prompt("直接返回“我是节点2”")
+                    .stream()
+                    .chatResponse();
+            return Map.of("node2Result", chatResponseFlux);
+        });
+
+        var node3 = node_async(state -> {
+            Flux<ChatResponse> chatResponseFlux = chatClient.prompt("直接返回“我是节点3”")
+                    .stream()
+                    .chatResponse();
+            return Map.of("node3Result", chatResponseFlux);
+        });
+
+        StateGraph stateGraph = new StateGraph();
+        stateGraph
+                .addNode("node1", node1)
+                .addNode("node2", node2)
+                .addNode("node3", node3);
+
+        stateGraph.addEdge(START, "node1")
+                .addEdge("node1", "node2")
+                .addConditionalEdges("node2", edge_async(state -> {
+                            var humanFeedbackResult = (String) state.value("humanFeedbackResult").orElse("unknown");
+                            return humanFeedbackResult.equals("next") ? "next" : "unknown";
+                        }),
+                        Map.of("next", "node3", "unknown", "node2"))
+                .addEdge("node3", END);
+
+        var compileConfig = CompileConfig.builder()
+                .saverConfig(SaverConfig.builder()
+                        .register(memorySaver)
+                        .build())
+                .interruptBefore("node2")
+                .build();
+
+        CompiledGraph compiledGraph = stateGraph.compile(compileConfig);
+
+        GraphRepresentation representation = compiledGraph.getGraph(GraphRepresentation.Type.MERMAID);
+        System.out.println(representation.content());
+
+        return compiledGraph;
+    }
+
+    @Bean
+    public CompiledGraph interruptStateGraph(ChatClient.Builder chatClientBuilder, MemorySaver memorySaver) throws GraphStateException {
+
+        ChatClient chatClient = chatClientBuilder.build();
+
+        // 定义普通节点
+        var node1 = node_async(state -> {
+            Flux<ChatResponse> chatResponseFlux = chatClient.prompt("直接返回“我是节点1”")
+                    .stream()
+                    .chatResponse();
+            return Map.of("node1Result", chatResponseFlux);
+        });
+
+        var node2 = new InterruptableNodeAction(chatClient);
+
+        var node3 = node_async(state -> {
+            Flux<ChatResponse> chatResponseFlux = chatClient.prompt("直接返回“我是节点3”")
+                    .stream()
+                    .chatResponse();
+            return Map.of("node3Result", chatResponseFlux);
+        });
+
+        StateGraph stateGraph = new StateGraph();
+        stateGraph
+                .addNode("node1", node1)
+                .addNode("node2", node2)
+                .addNode("node3", node3);
+
+        stateGraph.addEdge(START, "node1")
+                .addEdge("node1", "node2")
+                .addConditionalEdges("node2", edge_async(state -> {
+                            var humanFeedbackResult = (String) state.value("humanFeedbackResult").orElse("unknown");
+                            return humanFeedbackResult.equals("next") ? "next" : "unknown";
+                        }),
+                        Map.of("next", "node3", "unknown", "node2"))
+                .addEdge("node3", END);
+
+        var compileConfig = CompileConfig.builder()
+                .saverConfig(SaverConfig.builder()
+                        .register(memorySaver)
+                        .build())
+                .build();
+
+        CompiledGraph compiledGraph = stateGraph.compile(compileConfig);
+
+        GraphRepresentation representation = compiledGraph.getGraph(GraphRepresentation.Type.MERMAID);
+        System.out.println(representation.content());
+
+        return compiledGraph;
+    }
 }

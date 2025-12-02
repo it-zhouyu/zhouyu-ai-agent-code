@@ -4,6 +4,7 @@ import com.alibaba.cloud.ai.graph.CompiledGraph;
 import com.alibaba.cloud.ai.graph.NodeOutput;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
+import com.alibaba.cloud.ai.graph.action.InterruptionMetadata;
 import com.alibaba.cloud.ai.graph.checkpoint.Checkpoint;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.exception.GraphStateException;
@@ -36,6 +37,12 @@ public class GraphController {
 
     @Autowired
     private CompiledGraph helloStateGraph;
+
+    @Autowired
+    private CompiledGraph interruptBeforeStateGraph;
+
+    @Autowired
+    private CompiledGraph interruptStateGraph;
 
     @GetMapping("/simple")
     public Map<String, Object> simple(String subject) {
@@ -90,5 +97,96 @@ public class GraphController {
         }
 
         return overAllState.orElseThrow().value("result", String.class).orElseThrow();
+    }
+
+    @GetMapping(value = "/interruptBeforeStateGraph", produces = "text/html;charset=UTF-8")
+    public Flux<String> interruptBeforeStateGraph(@RequestParam String chatId) throws GraphStateException {
+        RunnableConfig config = RunnableConfig.builder().threadId(chatId).build();
+
+        Flux<NodeOutput> outputFlux = interruptBeforeStateGraph.stream(Map.of(), config);
+        return outputFlux.map(output -> {
+            log.info("output: {}", output);
+            if (output instanceof StreamingOutput<?> streamingOutput) {
+                if (streamingOutput.message() != null) {
+                    return streamingOutput.message().getText();
+                }
+            } else if (output instanceof InterruptionMetadata interruptionMetadata) {
+                return "中断了，请提供用户的年龄";
+            }
+            return "";
+        });
+    }
+
+    @GetMapping(value = "/continueBeforeStateGraph", produces = "text/html;charset=UTF-8")
+    public Flux<String> continueBeforeStateGraph(@RequestParam String chatId, @RequestParam String userInput) throws Exception {
+        RunnableConfig config = RunnableConfig.builder().threadId(chatId).build();
+
+        log.info(" --State before update --{} ", interruptBeforeStateGraph.getState(config));
+
+        RunnableConfig updatedConfig = interruptBeforeStateGraph.updateState(config, Map.of("humanFeedbackResult", userInput));
+        log.info("--State after update --{} ", interruptBeforeStateGraph.getState(updatedConfig));
+
+        RunnableConfig resumeConfig = RunnableConfig.builder(updatedConfig)
+                .addMetadata(RunnableConfig.HUMAN_FEEDBACK_METADATA_KEY, "placeholder")
+                .build();
+
+        Flux<NodeOutput> outputFlux = interruptBeforeStateGraph.streamFromInitialNode(interruptBeforeStateGraph.getState(updatedConfig).state(), resumeConfig);
+        return outputFlux.map(output -> {
+            log.info("output: {}", output);
+            if (output instanceof StreamingOutput<?> streamingOutput) {
+                if (streamingOutput.message() != null) {
+                    return streamingOutput.message().getText();
+                }
+            } else if (output instanceof InterruptionMetadata interruptionMetadata) {
+                return "再次中断了，请提供用户的年龄";
+            }
+            return "";
+        });
+    }
+
+
+    @GetMapping(value = "/interruptStateGraph", produces = "text/html;charset=UTF-8")
+    public Flux<String> interruptStateGraph(@RequestParam String chatId) throws GraphStateException {
+        RunnableConfig config = RunnableConfig.builder().threadId(chatId).build();
+
+        Flux<NodeOutput> outputFlux = interruptStateGraph.stream(Map.of(), config);
+        return outputFlux.map(output -> {
+            log.info("output: {}", output);
+            if (output instanceof StreamingOutput<?> streamingOutput) {
+                if (streamingOutput.message() != null) {
+                    return streamingOutput.message().getText();
+                }
+            } else if (output instanceof InterruptionMetadata interruptionMetadata) {
+                return "中断了，请提供用户的年龄";
+            }
+            return "";
+        });
+    }
+
+    @GetMapping(value = "/continueStateGraph", produces = "text/html;charset=UTF-8")
+    public Flux<String> continueStateGraph(@RequestParam String chatId, @RequestParam String userInput) throws Exception {
+        RunnableConfig config = RunnableConfig.builder().threadId(chatId).build();
+
+        log.info(" --State before update --{} ", interruptStateGraph.getState(config));
+
+        RunnableConfig updatedConfig = interruptStateGraph.updateState(config, Map.of("humanFeedbackResult", userInput));
+        log.info("--State after update --{} ", interruptStateGraph.getState(updatedConfig));
+
+        RunnableConfig resumeConfig = RunnableConfig.builder(updatedConfig)
+                .addMetadata(RunnableConfig.HUMAN_FEEDBACK_METADATA_KEY, "placeholder")
+                .build();
+
+        Flux<NodeOutput> outputFlux = interruptStateGraph.streamFromInitialNode(interruptBeforeStateGraph.getState(updatedConfig).state(), resumeConfig);
+        return outputFlux.map(output -> {
+            log.info("output: {}", output);
+            if (output instanceof StreamingOutput<?> streamingOutput) {
+                if (streamingOutput.message() != null) {
+                    return streamingOutput.message().getText();
+                }
+            } else if (output instanceof InterruptionMetadata interruptionMetadata) {
+                return "再次中断了，请提供用户的年龄";
+            }
+            return "";
+        });
     }
 }
