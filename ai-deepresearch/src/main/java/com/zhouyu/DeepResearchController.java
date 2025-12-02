@@ -49,35 +49,35 @@ public class DeepResearchController {
         });
     }
 
-//    @GetMapping(value = "/sse")
-//    public SseEmitter sse(String input) {
-//        SseEmitter sseEmitter = new SseEmitter(300000L) {
-//            @Override
-//            protected void extendResponse(ServerHttpResponse outputMessage) {
-//                HttpHeaders headers = outputMessage.getHeaders();
-//                headers.setContentType(new MediaType("text", "event-stream", StandardCharsets.UTF_8));
-//            }
-//        };
-//
-//        Flux<String> outputFlux = compiledGraph.stream(Map.of("input", input))
-//                .map(output -> {
-//                    log.info("output: {}", output);
-//                    if (output instanceof StreamingOutput<?> streamingOutput) {
-//                        if (streamingOutput.message() != null && streamingOutput.node().equals("reporter")) {
-//                            return streamingOutput.message().getText();
-//                        }
-//                    }
-//                    return "";
-//                });
-//
-//        outputFlux.subscribe(token -> {
-//            try {
-//                sseEmitter.send(Map.of("content", token));
-//            } catch (IOException e) {
-//                sseEmitter.completeWithError(e);
-//            }
-//        }, sseEmitter::completeWithError, sseEmitter::complete);
-//
-//        return sseEmitter;
-//    }
+    @GetMapping(value = "/sse")
+    public SseEmitter sse(String input) {
+        SseEmitter sseEmitter = new SseEmitter(300000L) {
+            @Override
+            protected void extendResponse(ServerHttpResponse outputMessage) {
+                HttpHeaders headers = outputMessage.getHeaders();
+                headers.setContentType(new MediaType("text", "event-stream", StandardCharsets.UTF_8));
+            }
+        };
+
+        Flux<String> outputFlux = compiledGraph.stream(Map.of("input", input))
+                .map(output -> {
+                    log.info("output: {}", output);
+                    if (output instanceof StreamingOutput<?> streamingOutput) {
+                        if (streamingOutput.message() != null && !streamingOutput.node().equals("coordinatorNode")) {
+                            return streamingOutput.message().getText();
+                        }
+                    }
+                    return "";
+                });
+
+        outputFlux.subscribe(token -> {
+            try {
+                sseEmitter.send(Map.of("content", token));
+            } catch (IOException e) {
+                sseEmitter.completeWithError(e);
+            }
+        }, sseEmitter::completeWithError, sseEmitter::complete);
+
+        return sseEmitter;
+    }
 }
