@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智能问诊系统</title>
+    <title>AI DeepResearch</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         // 配置marked.js以支持更完整的Markdown功能
@@ -368,19 +368,19 @@
 <body>
     <div class="container">
         <div class="header">
-            智能问诊系统
+            AI DeepResearch
         </div>
         <div class="chat-container" id="chatContainer">
             <div class="welcome-message" id="welcomeMessage">
-                <h2>智能问诊助手</h2>
-                <p>请描述你的症状，系统会告诉你应该挂哪个科</p>
+                <h2>AI DeepResearch</h2>
+                <p>请输入你的主题，系统会进行深度调研并生成调研报告</p>
             </div>
         </div>
         <div class="input-container">
             <div class="input-box">
                 <textarea 
                     id="inputField" 
-                    placeholder="请描述你的症状"
+                    placeholder="请输入你的主题"
                 ></textarea>
                 <button id="submitBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -422,7 +422,7 @@
                 avatarDiv.textContent = role === 'user' ? '我' : 'AI';
 
                 headerDiv.appendChild(avatarDiv);
-                headerDiv.appendChild(document.createTextNode(role === 'user' ? '你' : '问诊助手'));
+                headerDiv.appendChild(document.createTextNode(role === 'user' ? '你' : 'DeepResearch'));
 
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'message-content';
@@ -458,7 +458,7 @@
                 avatarDiv.textContent = 'AI';
 
                 headerDiv.appendChild(avatarDiv);
-                headerDiv.appendChild(document.createTextNode('问诊助手'));
+                headerDiv.appendChild(document.createTextNode('DeepResearch'));
 
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'message-content';
