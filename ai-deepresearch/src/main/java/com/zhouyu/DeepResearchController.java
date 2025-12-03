@@ -59,12 +59,15 @@ public class DeepResearchController {
             }
         };
 
-        Flux<String> outputFlux = compiledGraph.stream(Map.of("input", input))
+        RunnableConfig runnableConfig = RunnableConfig.builder().addParallelNodeExecutor("plannerNode", Executors.newFixedThreadPool(10)).build();
+        Flux<String> outputFlux = compiledGraph.stream(Map.of("input", input), runnableConfig)
                 .map(output -> {
                     log.info("output: {}", output);
                     if (output instanceof StreamingOutput<?> streamingOutput) {
                         if (streamingOutput.message() != null && !streamingOutput.node().equals("coordinatorNode")) {
                             return streamingOutput.message().getText();
+                        } else if (streamingOutput.chunk() != null && !streamingOutput.node().equals("coordinatorNode")) {
+                            return streamingOutput.chunk();
                         }
                     }
                     return "";
