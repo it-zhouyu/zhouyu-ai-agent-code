@@ -3,6 +3,7 @@ package com.zhouyu.node;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.action.NodeAction;
 import com.alibaba.cloud.ai.toolcalling.tavily.TavilySearchConstants;
+import com.zhouyu.util.Constant;
 import com.zhouyu.util.PromptUtil;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -28,6 +29,7 @@ public class PlannerNode implements NodeAction {
 
         String input = state.value("input", String.class).orElseThrow();
         String systemPrompt = PromptUtil.getPrompt("planner");
+        systemPrompt = systemPrompt.replace("{{max_steps}}", String.valueOf(Constant.MAX_STEPS));
 
         Flux<ChatResponse> chatResponseFlux = chatClient.prompt()
                 .system(systemPrompt)

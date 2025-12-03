@@ -1,6 +1,7 @@
 package com.zhouyu;
 
 import com.alibaba.cloud.ai.graph.CompiledGraph;
+import com.alibaba.cloud.ai.graph.GraphRepresentation;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.StateGraph;
 import com.alibaba.cloud.ai.graph.action.AsyncEdgeAction;
@@ -11,6 +12,7 @@ import com.zhouyu.node.CoordinatorNode;
 import com.zhouyu.node.PlannerNode;
 import com.zhouyu.node.ReporterNode;
 import com.zhouyu.node.ResearcherNode;
+import com.zhouyu.util.Constant;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.boot.SpringApplication;
@@ -42,19 +44,27 @@ public class DeepResearchApplication {
         StateGraph stateGraph = new StateGraph();
         stateGraph.addNode("coordinatorNode", node_async(new CoordinatorNode(chatClientBuilder.build())));
         stateGraph.addNode("plannerNode", node_async(new PlannerNode(chatClientBuilder.build())));
-        stateGraph.addNode("researcherNode", node_async(new ResearcherNode(chatClientBuilder.build())));
         stateGraph.addNode("reporterNode", node_async(new ReporterNode(chatClientBuilder.build())));
 
         stateGraph.addEdge(START, "coordinatorNode")
                 .addConditionalEdges("coordinatorNode", AsyncEdgeAction.edge_async(state -> {
-                    AssistantMessage coordinatorResult = (AssistantMessage)state.value("coordinatorResult").orElseThrow();
+                    AssistantMessage coordinatorResult = (AssistantMessage) state.value("coordinatorResult").orElseThrow();
                     return coordinatorResult.getText().equals("NEED_PLAN") ? "plannerNode" : END;
                 }), Map.of("plannerNode", "plannerNode", END, END))
-                .addEdge("plannerNode", "researcherNode")
-                .addEdge("researcherNode", "reporterNode")
                 .addEdge("reporterNode", END);
 
-        return stateGraph.compile();
+        for (int i = 0; i < Constant.MAX_STEPS; i++) {
+            String researcherNode = "researcherNode_" + i;
+            stateGraph.addNode(researcherNode, node_async(new ResearcherNode(chatClientBuilder.build(), i)));
+            stateGraph.addEdge("plannerNode", researcherNode)
+                    .addEdge(researcherNode, "reporterNode");
+        }
+
+        CompiledGraph compiledGraph = stateGraph.compile();
+        GraphRepresentation representation = compiledGraph.getGraph(GraphRepresentation.Type.MERMAID);
+        System.out.println(representation.content());
+
+        return compiledGraph;
     }
 
     public static void main(String[] args) {
