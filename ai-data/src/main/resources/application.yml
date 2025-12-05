@@ -1,0 +1,27 @@
+spring:
+  ai:
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY}
+      chat:
+        options:
+          model: qwen3-max
+      embedding:
+        options:
+          model: text-embedding-v4
+    vectorstore:
+      elasticsearch:
+        initialize-schema: true
+        index-name: ai-data-index
+        dimensions: 1024
+        similarity: cosine
+  elasticsearch:
+    uris: 127.0.0.1:9200
+    username: elastic
+    password: Q2i6oixj5uF=UL8yq7z1
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/my_db?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&allowMultiQueries=true&allowPublicKeyRetrieval=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: Zhouyu123456...
+
+server:
+  port: 8081

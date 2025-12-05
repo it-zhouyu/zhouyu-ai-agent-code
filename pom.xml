@@ -14,6 +14,7 @@
     <artifactId>zhouyu-ai-agent-vip</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+
     <modules>
         <module>java-react-agent</module>
         <module>ai-manus</module>
@@ -24,6 +25,7 @@
         <module>ai-consultation</module>
         <module>spring-ai-alibaba-graph-demo</module>
         <module>ai-deepresearch</module>
+        <module>ai-data</module>
     </modules>
 
     <properties>
