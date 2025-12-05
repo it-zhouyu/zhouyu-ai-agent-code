@@ -1,9 +1,6 @@
 package com.zhouyu;
 
-import com.alibaba.cloud.ai.graph.CompiledGraph;
-import com.alibaba.cloud.ai.graph.GraphRepresentation;
-import com.alibaba.cloud.ai.graph.OverAllState;
-import com.alibaba.cloud.ai.graph.StateGraph;
+import com.alibaba.cloud.ai.graph.*;
 import com.alibaba.cloud.ai.graph.action.AsyncEdgeAction;
 import com.alibaba.cloud.ai.graph.action.AsyncNodeAction;
 import com.alibaba.cloud.ai.graph.action.EdgeAction;
@@ -35,7 +32,7 @@ public class DataApplication {
         stateGraph.addNode("plannerNode", node_async(new PlannerNode(chatClientBuilder.build())));
         stateGraph.addNode("planExecuteNode", node_async(new PlanExecuteNode(chatClientBuilder.build())));
         stateGraph.addNode("sqlExecuteNode", node_async(new SqlExecuteNode()));
-        stateGraph.addNode("reportGeneratorNode", node_async(new ReportGeneratorNode()));
+        stateGraph.addNode("reportGeneratorNode", node_async(new ReportGeneratorNode(chatClientBuilder.build())));
 
 
         stateGraph.addEdge(StateGraph.START, "keywordsExtractNode")
@@ -51,7 +48,9 @@ public class DataApplication {
                 .addEdge("sqlExecuteNode", "planExecuteNode")
                 .addEdge("reportGeneratorNode", StateGraph.END);
 
-        CompiledGraph compiledGraph = stateGraph.compile();
+        CompiledGraph compiledGraph = stateGraph.compile(CompileConfig.builder()
+                        .interruptAfter("plannerNode")
+                .build());
         GraphRepresentation representation = compiledGraph.getGraph(GraphRepresentation.Type.MERMAID);
         System.out.println(representation.content());
 
