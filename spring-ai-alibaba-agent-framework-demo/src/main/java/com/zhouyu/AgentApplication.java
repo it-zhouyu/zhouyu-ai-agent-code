@@ -6,6 +6,8 @@ import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.agent.hook.Hook;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.HumanInTheLoopHook;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.ToolConfig;
+import com.alibaba.cloud.ai.graph.agent.hook.shelltool.ShellToolAgentHook;
+import com.alibaba.cloud.ai.graph.agent.tools.ShellTool;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.store.StoreItem;
 import com.alibaba.cloud.ai.graph.store.stores.MemoryStore;
@@ -145,6 +147,22 @@ public class AgentApplication {
                 .model(chatModel)
                 .saver(new MemorySaver())
                 .tools(storeTool)
+                .build();
+        return agent;
+    }
+
+    @Bean
+    public ReactAgent defaultHookAgent(ChatModel chatModel) {
+
+        ToolCallback toolCallback = ShellTool.builder("shellWorkspace")
+                .withName("shell")
+                .build();
+
+        ReactAgent agent = ReactAgent.builder()
+                .name("defaultHookAgent")
+                .model(chatModel)
+                .tools(toolCallback)
+                .hooks(ShellToolAgentHook.builder().build())
                 .build();
         return agent;
     }
