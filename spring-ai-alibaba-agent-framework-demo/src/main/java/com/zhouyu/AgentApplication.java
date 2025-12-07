@@ -11,6 +11,7 @@ import com.alibaba.cloud.ai.graph.agent.hook.pii.PIIDetectionHook;
 import com.alibaba.cloud.ai.graph.agent.hook.pii.PIIType;
 import com.alibaba.cloud.ai.graph.agent.hook.pii.RedactionStrategy;
 import com.alibaba.cloud.ai.graph.agent.hook.shelltool.ShellToolAgentHook;
+import com.alibaba.cloud.ai.graph.agent.hook.summarization.SummarizationHook;
 import com.alibaba.cloud.ai.graph.agent.tools.ShellTool;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.store.StoreItem;
@@ -158,16 +159,17 @@ public class AgentApplication {
     @Bean
     public ReactAgent defaultHookAgent(ChatModel chatModel) {
 
-        PIIDetectionHook pii = PIIDetectionHook.builder()
-                .piiType(PIIType.EMAIL)
-                .strategy(RedactionStrategy.REDACT)
-                .applyToInput(true)
+        SummarizationHook summarizer = SummarizationHook.builder()
+                .model(chatModel)
+                .maxTokensBeforeSummary(10)
+                .messagesToKeep(2)
                 .build();
 
         ReactAgent agent = ReactAgent.builder()
                 .name("defaultHookAgent")
                 .model(chatModel)
-                .hooks(pii)
+                .hooks(summarizer)
+                .saver(new MemorySaver())
                 .build();
         return agent;
     }
