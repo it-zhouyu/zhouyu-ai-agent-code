@@ -3,6 +3,7 @@ package com.zhouyu;
 import com.alibaba.cloud.ai.graph.CompiledGraph;
 import com.alibaba.cloud.ai.graph.GraphRepresentation;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
+import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.zhouyu.tools.DateTool;
 import com.zhouyu.tools.ZhouyuTools;
 import org.springframework.ai.chat.model.ChatModel;
@@ -49,6 +50,27 @@ public class AgentApplication {
         CompiledGraph compiledGraph = reactAgent.getAndCompileGraph();
         GraphRepresentation representation = compiledGraph.getGraph(GraphRepresentation.Type.MERMAID);
         System.out.println(representation.content());
+
+        return reactAgent;
+    }
+
+    @Bean
+    public MemorySaver memorySaver() {
+        return new MemorySaver();
+    }
+
+    @Bean
+    public ReactAgent memoryAgent(ChatModel chatModel, MemorySaver memorySaver) {
+
+
+        // MemorySaver ChatClient ChatMemory
+
+        ReactAgent reactAgent = ReactAgent.builder()
+                .name("memoryAgent")
+                .model(chatModel)
+                .systemPrompt("简短的回答用户问题")
+                .saver(memorySaver)
+                .build();
 
         return reactAgent;
     }
