@@ -7,6 +7,9 @@ import com.alibaba.cloud.ai.graph.agent.hook.Hook;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.HumanInTheLoopHook;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.ToolConfig;
 import com.alibaba.cloud.ai.graph.agent.hook.modelcalllimit.ModelCallLimitHook;
+import com.alibaba.cloud.ai.graph.agent.hook.pii.PIIDetectionHook;
+import com.alibaba.cloud.ai.graph.agent.hook.pii.PIIType;
+import com.alibaba.cloud.ai.graph.agent.hook.pii.RedactionStrategy;
 import com.alibaba.cloud.ai.graph.agent.hook.shelltool.ShellToolAgentHook;
 import com.alibaba.cloud.ai.graph.agent.tools.ShellTool;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
@@ -155,15 +158,16 @@ public class AgentApplication {
     @Bean
     public ReactAgent defaultHookAgent(ChatModel chatModel) {
 
-        ToolCallback toolCallback = ShellTool.builder("shellWorkspace")
-                .withName("shell")
+        PIIDetectionHook pii = PIIDetectionHook.builder()
+                .piiType(PIIType.EMAIL)
+                .strategy(RedactionStrategy.REDACT)
+                .applyToInput(true)
                 .build();
 
         ReactAgent agent = ReactAgent.builder()
                 .name("defaultHookAgent")
                 .model(chatModel)
-                .tools(toolCallback)
-                .hooks(ModelCallLimitHook.builder().threadLimit(1).exitBehavior(ModelCallLimitHook.ExitBehavior.ERROR).build())
+                .hooks(pii)
                 .build();
         return agent;
     }
