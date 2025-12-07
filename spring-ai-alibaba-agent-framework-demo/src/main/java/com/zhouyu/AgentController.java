@@ -2,10 +2,12 @@ package com.zhouyu;
 
 import com.alibaba.cloud.ai.graph.NodeOutput;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
+import com.alibaba.cloud.ai.graph.action.InterruptionMetadata;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.checkpoint.Checkpoint;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.exception.GraphRunnerException;
+import com.alibaba.cloud.ai.graph.store.stores.MemoryStore;
 import com.alibaba.cloud.ai.graph.streaming.StreamingOutput;
 import com.zhouyu.tools.ZhouyuTools;
 import lombok.extern.log4j.Log4j2;
@@ -16,8 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 作者：IT周瑜
@@ -108,6 +109,90 @@ public class AgentController {
         try {
             AssistantMessage message = hookAgent.call(input);
             return message.getText();
+        } catch (GraphRunnerException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    @Autowired
+    private ReactAgent humanHookAgent;
+
+
+    private Map<String, InterruptionMetadata> interruptionMetadataSessions = new HashMap<>();
+
+    @GetMapping("/humanHook")
+    public String humanHook(String input, String threadId) {
+
+        RunnableConfig runnableConfig = RunnableConfig.builder().threadId(threadId).build();
+        try {
+            Optional<NodeOutput> result = humanHookAgent.invokeAndGetOutput(input, runnableConfig);
+
+            if (result.isPresent() && result.get() instanceof InterruptionMetadata interruptionMetadata) {
+                List<InterruptionMetadata.ToolFeedback> toolFeedbacks = interruptionMetadata.toolFeedbacks();
+                for (InterruptionMetadata.ToolFeedback feedback : toolFeedbacks) {
+                    System.out.println("工具: " + feedback.getName());
+                    System.out.println("参数: " + feedback.getArguments());
+                    System.out.println("描述: " + feedback.getDescription());
+                }
+                interruptionMetadataSessions.put(threadId, interruptionMetadata);
+
+                return toolFeedbacks.get(0).getDescription();
+            }
+
+            return result.orElseThrow().state().toString();
+        } catch (GraphRunnerException e) {
+            throw new RuntimeException(e);
+        }
+
+
+    }
+
+    @GetMapping("/humanAgentFeedback")
+    public String humanAgentFeedback(String threadId) throws GraphRunnerException {
+        InterruptionMetadata interruptionMetadata = interruptionMetadataSessions.get(threadId);
+
+        InterruptionMetadata.Builder feedbackBuilder = InterruptionMetadata.builder()
+                .nodeId(interruptionMetadata.node())
+                .state(interruptionMetadata.state());
+
+        List<InterruptionMetadata.ToolFeedback> toolFeedbacks = interruptionMetadata.toolFeedbacks();
+        toolFeedbacks.forEach(toolFeedback -> {
+            InterruptionMetadata.ToolFeedback approvedFeedback =
+                    InterruptionMetadata.ToolFeedback.builder(toolFeedback)
+                            .result(InterruptionMetadata.ToolFeedback.FeedbackResult.APPROVED)
+                            .build();
+            feedbackBuilder.addToolFeedback(approvedFeedback);
+        });
+
+        InterruptionMetadata approvalMetadata = feedbackBuilder.build();
+        RunnableConfig resumeConfig = RunnableConfig.builder()
+                .threadId(threadId)
+                .addMetadata(RunnableConfig.HUMAN_FEEDBACK_METADATA_KEY, approvalMetadata)
+                .build();
+
+        Optional<NodeOutput> finalResult = humanHookAgent.invokeAndGetOutput("", resumeConfig);
+
+        if (finalResult.isPresent()) {
+            System.out.println("执行完成");
+            System.out.println("最终结果: " + finalResult.get());
+        }
+
+        return finalResult.orElseThrow().state().toString();
+    }
+
+    @Autowired
+    private MemoryStore memoryStore;
+
+    @Autowired
+    private ReactAgent storeAgent;
+
+    @GetMapping("/store")
+    public String store(String input, String threadId) {
+        try {
+            RunnableConfig config = RunnableConfig.builder().threadId(threadId).store(memoryStore).build();
+            AssistantMessage assistantMessage = storeAgent.call(input, config);
+            return assistantMessage.getText();
         } catch (GraphRunnerException e) {
             throw new RuntimeException(e);
         }
