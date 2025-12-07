@@ -14,6 +14,7 @@ import com.alibaba.cloud.ai.graph.agent.hook.pii.RedactionStrategy;
 import com.alibaba.cloud.ai.graph.agent.hook.shelltool.ShellToolAgentHook;
 import com.alibaba.cloud.ai.graph.agent.hook.summarization.SummarizationHook;
 import com.alibaba.cloud.ai.graph.agent.interceptor.contextediting.ContextEditingInterceptor;
+import com.alibaba.cloud.ai.graph.agent.interceptor.todolist.TodoListInterceptor;
 import com.alibaba.cloud.ai.graph.agent.tools.ShellTool;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.store.StoreItem;
@@ -161,8 +162,7 @@ public class AgentApplication {
     @Bean
     public ReactAgent defaultHookAgent(ChatModel chatModel) {
 
-        FilesystemInterceptor interceptor = FilesystemInterceptor.builder()
-                .readOnly(false)
+        TodoListInterceptor interceptor = TodoListInterceptor.builder()
                 .build();
 
         ReactAgent agent = ReactAgent.builder()
