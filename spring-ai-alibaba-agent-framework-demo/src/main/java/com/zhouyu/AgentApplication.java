@@ -6,6 +6,7 @@ import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.agent.hook.Hook;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.HumanInTheLoopHook;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.ToolConfig;
+import com.alibaba.cloud.ai.graph.agent.hook.modelcalllimit.ModelCallLimitHook;
 import com.alibaba.cloud.ai.graph.agent.hook.shelltool.ShellToolAgentHook;
 import com.alibaba.cloud.ai.graph.agent.tools.ShellTool;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
@@ -162,7 +163,7 @@ public class AgentApplication {
                 .name("defaultHookAgent")
                 .model(chatModel)
                 .tools(toolCallback)
-                .hooks(ShellToolAgentHook.builder().build())
+                .hooks(ModelCallLimitHook.builder().threadLimit(1).exitBehavior(ModelCallLimitHook.ExitBehavior.ERROR).build())
                 .build();
         return agent;
     }
