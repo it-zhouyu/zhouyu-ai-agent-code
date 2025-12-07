@@ -15,6 +15,7 @@ import com.alibaba.cloud.ai.graph.agent.hook.shelltool.ShellToolAgentHook;
 import com.alibaba.cloud.ai.graph.agent.hook.summarization.SummarizationHook;
 import com.alibaba.cloud.ai.graph.agent.interceptor.contextediting.ContextEditingInterceptor;
 import com.alibaba.cloud.ai.graph.agent.interceptor.todolist.TodoListInterceptor;
+import com.alibaba.cloud.ai.graph.agent.interceptor.toolselection.ToolSelectionInterceptor;
 import com.alibaba.cloud.ai.graph.agent.tools.ShellTool;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.store.StoreItem;
@@ -162,13 +163,15 @@ public class AgentApplication {
     @Bean
     public ReactAgent defaultHookAgent(ChatModel chatModel) {
 
-        TodoListInterceptor interceptor = TodoListInterceptor.builder()
+        ToolSelectionInterceptor interceptor = ToolSelectionInterceptor.builder()
+                .selectionModel(chatModel)
                 .build();
 
         ReactAgent agent = ReactAgent.builder()
                 .name("defaultHookAgent")
                 .model(chatModel)
                 .interceptors(interceptor)
+                .tools(ToolCallbacks.from(new ZhouyuTools()))
                 .saver(new MemorySaver())
                 .build();
         return agent;
