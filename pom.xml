@@ -26,6 +26,7 @@
         <module>spring-ai-alibaba-graph-demo</module>
         <module>ai-deepresearch</module>
         <module>ai-data</module>
+        <module>spring-ai-alibaba-agent-framework-demo</module>
     </modules>
 
     <properties>
