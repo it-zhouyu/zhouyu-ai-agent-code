@@ -198,4 +198,19 @@ public class AgentController {
         }
     }
 
+
+    @Autowired
+    private ReactAgent defaultHookAgent;
+
+    @GetMapping("/defaultHook")
+    public String defaultHook(String input, String threadId) {
+        try {
+            RunnableConfig config = RunnableConfig.builder().threadId(threadId).build();
+            AssistantMessage assistantMessage = defaultHookAgent.call(input, config);
+            return assistantMessage.getText();
+        } catch (GraphRunnerException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
