@@ -1,6 +1,7 @@
 package com.zhouyu.tools;
 
 import lombok.extern.log4j.Log4j2;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 
 /**
@@ -13,6 +14,9 @@ public class ZhouyuTools {
 
     @Tool(description = "获取指定城市的天气")
     public String getWeather(String cityName) {
+//        log.info("工具上下文中的Context:{}", toolContext.getContext());
+//        log.info("工具上下文中的History:{}", toolContext.getToolCallHistory());
+
         log.info("正在获取{}天气信息...", cityName);
         return "天晴";
     }

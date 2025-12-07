@@ -16,6 +16,9 @@ import java.util.function.BiFunction;
 public class DateTool implements BiFunction<DateTool.DateRequest, ToolContext, String> {
     @Override
     public String apply(DateRequest dateRequest, ToolContext toolContext) {
+        log.info("工具上下文中的Context:{}", toolContext.getContext());
+        log.info("工具上下文中的History:{}", toolContext.getToolCallHistory());
+
         log.info("获取{}的时间", dateRequest.cityName);
         return LocalDateTime.now().toString();
     }
