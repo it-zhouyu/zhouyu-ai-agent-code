@@ -3,6 +3,7 @@ package com.zhouyu;
 import com.alibaba.cloud.ai.graph.CompiledGraph;
 import com.alibaba.cloud.ai.graph.GraphRepresentation;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
+import com.alibaba.cloud.ai.graph.agent.extension.interceptor.FilesystemInterceptor;
 import com.alibaba.cloud.ai.graph.agent.hook.Hook;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.HumanInTheLoopHook;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.ToolConfig;
@@ -160,23 +161,14 @@ public class AgentApplication {
     @Bean
     public ReactAgent defaultHookAgent(ChatModel chatModel) {
 
-        // 调用list工具
-        // [cleared]
-
-        // 调用list工具（工具、[cleared]）
-        // 5个文件，131313123123
-
-        ContextEditingInterceptor interceptor = ContextEditingInterceptor.builder()
-                .trigger(10)
-                .keep(1)
-                .clearAtLeast(3)
+        FilesystemInterceptor interceptor = FilesystemInterceptor.builder()
+                .readOnly(false)
                 .build();
 
         ReactAgent agent = ReactAgent.builder()
                 .name("defaultHookAgent")
                 .model(chatModel)
                 .interceptors(interceptor)
-                .tools(ToolCallbacks.from(new ZhouyuTools()))
                 .saver(new MemorySaver())
                 .build();
         return agent;
