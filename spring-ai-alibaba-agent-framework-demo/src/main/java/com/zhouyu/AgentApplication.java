@@ -12,6 +12,7 @@ import com.alibaba.cloud.ai.graph.agent.hook.pii.PIIType;
 import com.alibaba.cloud.ai.graph.agent.hook.pii.RedactionStrategy;
 import com.alibaba.cloud.ai.graph.agent.hook.shelltool.ShellToolAgentHook;
 import com.alibaba.cloud.ai.graph.agent.hook.summarization.SummarizationHook;
+import com.alibaba.cloud.ai.graph.agent.interceptor.contextediting.ContextEditingInterceptor;
 import com.alibaba.cloud.ai.graph.agent.tools.ShellTool;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.store.StoreItem;
@@ -159,16 +160,23 @@ public class AgentApplication {
     @Bean
     public ReactAgent defaultHookAgent(ChatModel chatModel) {
 
-        SummarizationHook summarizer = SummarizationHook.builder()
-                .model(chatModel)
-                .maxTokensBeforeSummary(10)
-                .messagesToKeep(2)
+        // 调用list工具
+        // [cleared]
+
+        // 调用list工具（工具、[cleared]）
+        // 5个文件，131313123123
+
+        ContextEditingInterceptor interceptor = ContextEditingInterceptor.builder()
+                .trigger(10)
+                .keep(1)
+                .clearAtLeast(3)
                 .build();
 
         ReactAgent agent = ReactAgent.builder()
                 .name("defaultHookAgent")
                 .model(chatModel)
-                .hooks(summarizer)
+                .interceptors(interceptor)
+                .tools(ToolCallbacks.from(new ZhouyuTools()))
                 .saver(new MemorySaver())
                 .build();
         return agent;
