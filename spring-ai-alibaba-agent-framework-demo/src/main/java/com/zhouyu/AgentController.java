@@ -37,6 +37,9 @@ public class AgentController {
     @Autowired
     private ReactAgent memoryAgent;
 
+    @Autowired
+    private ReactAgent hookAgent;
+
     @GetMapping("/hello")
     public String hello(String input) {
         try {
@@ -98,6 +101,16 @@ public class AgentController {
                 .toolContext(Map.of("input", input))
                 .call()
                 .content();
+    }
+
+    @GetMapping("/hook")
+    public String hook(String input) {
+        try {
+            AssistantMessage message = hookAgent.call(input);
+            return message.getText();
+        } catch (GraphRunnerException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

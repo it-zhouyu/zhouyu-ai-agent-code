@@ -4,6 +4,10 @@ import com.alibaba.cloud.ai.graph.CompiledGraph;
 import com.alibaba.cloud.ai.graph.GraphRepresentation;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
+import com.zhouyu.hooks.LoggingHook;
+import com.zhouyu.hooks.ZhouyuModelHook;
+import com.zhouyu.interceptor.ZhouyuModelInterceptor;
+import com.zhouyu.interceptor.ZhouyuToolInterceptor;
 import com.zhouyu.tools.DateTool;
 import com.zhouyu.tools.ZhouyuTools;
 import org.springframework.ai.chat.model.ChatModel;
@@ -71,6 +75,25 @@ public class AgentApplication {
                 .systemPrompt("简短的回答用户问题")
                 .saver(memorySaver)
                 .build();
+
+        return reactAgent;
+    }
+
+    @Bean
+    public ReactAgent hookAgent(ChatModel chatModel) {
+        ReactAgent reactAgent = ReactAgent.builder()
+                .name("hookAgent")
+                .model(chatModel)
+                .tools(ToolCallbacks.from(new ZhouyuTools()))
+                .systemPrompt("简短的回答用户问题")
+                .hooks(new LoggingHook(), new ZhouyuModelHook())
+                .interceptors(new ZhouyuModelInterceptor(), new ZhouyuToolInterceptor())
+                .build();
+
+        CompiledGraph compiledGraph = reactAgent.getAndCompileGraph();
+        GraphRepresentation representation = compiledGraph.getGraph(GraphRepresentation.Type.MERMAID);
+        System.out.println(representation.content());
+
 
         return reactAgent;
     }
