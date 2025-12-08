@@ -4,6 +4,7 @@ import com.alibaba.cloud.ai.graph.CompiledGraph;
 import com.alibaba.cloud.ai.graph.GraphRepresentation;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.agent.extension.interceptor.FilesystemInterceptor;
+import com.alibaba.cloud.ai.graph.agent.flow.agent.LlmRoutingAgent;
 import com.alibaba.cloud.ai.graph.agent.flow.agent.ParallelAgent;
 import com.alibaba.cloud.ai.graph.agent.flow.agent.SequentialAgent;
 import com.alibaba.cloud.ai.graph.agent.hook.Hook;
@@ -230,6 +231,34 @@ public class AgentApplication {
                 .build();
 
         return parallelAgent;
+
+    }
+
+    @Bean
+    public LlmRoutingAgent llmRoutingAgent(ChatModel chatModel) throws GraphStateException {
+
+        ReactAgent codeAgent = ReactAgent.builder()
+                .name("agent1")
+                .model(chatModel)
+                .description("这是一个专门用来写Python代码的Agent")
+                .systemPrompt("你是一个程序员，写python")
+                .build();
+
+        ReactAgent poemAgent = ReactAgent.builder()
+                .name("agent2")
+                .model(chatModel)
+                .description("这是一个专门用来写五言绝句的Agent")
+                .systemPrompt("你是一个诗人，写五言绝句")
+                .build();
+
+        LlmRoutingAgent llmRoutingAgent = LlmRoutingAgent.builder()
+                .name("llmRoutingAgent")
+                .model(chatModel)
+                .subAgents(List.of(codeAgent, poemAgent))
+                .description("根据用户的输入，进行意图识别，判断是要写代码还是写诗")
+                .build();
+
+        return llmRoutingAgent;
 
     }
 
