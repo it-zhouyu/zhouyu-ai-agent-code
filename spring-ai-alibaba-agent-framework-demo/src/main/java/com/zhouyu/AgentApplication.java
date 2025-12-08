@@ -4,6 +4,7 @@ import com.alibaba.cloud.ai.graph.CompiledGraph;
 import com.alibaba.cloud.ai.graph.GraphRepresentation;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.agent.extension.interceptor.FilesystemInterceptor;
+import com.alibaba.cloud.ai.graph.agent.flow.agent.ParallelAgent;
 import com.alibaba.cloud.ai.graph.agent.flow.agent.SequentialAgent;
 import com.alibaba.cloud.ai.graph.agent.hook.Hook;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.HumanInTheLoopHook;
@@ -201,6 +202,34 @@ public class AgentApplication {
                 .build();
 
         return sequentialAgent;
+
+    }
+
+    @Bean
+    public ParallelAgent parallelAgent(ChatModel chatModel) throws GraphStateException {
+
+        ReactAgent javaAgent = ReactAgent.builder()
+                .name("javaAgent")
+                .model(chatModel)
+                .systemPrompt("你是一个Java程序员")
+                .outputKey("javaCode")
+                .build();
+
+        ReactAgent pythonAgent = ReactAgent.builder()
+                .name("pythonAgent")
+                .model(chatModel)
+                .systemPrompt("你是一个Python程序员")
+                .outputKey("pythonCode")
+                .build();
+
+        ParallelAgent parallelAgent = ParallelAgent.builder()
+                .name("parallelAgent")
+                .subAgents(List.of(javaAgent, pythonAgent))
+                .mergeStrategy(new ParallelAgent.DefaultMergeStrategy())
+                .mergeOutputKey("code")
+                .build();
+
+        return parallelAgent;
 
     }
 
