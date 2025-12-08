@@ -230,13 +230,17 @@ public class AgentController {
     @Autowired
     private ZhouyuAgent zhouyuAgent;
 
+    @Autowired
+    private SequentialAgent complexWorkflow;
+
     @GetMapping("/multiAgent")
     public Map<String, Object> multiAgent(String input) {
         try {
 //            Optional<OverAllState> overAllState = sequentialAgent.invoke(input);
 //            Optional<OverAllState> overAllState = parallelAgent.invoke(input);
 //            Optional<OverAllState> overAllState = llmRoutingAgent.invoke(input);
-            Optional<OverAllState> overAllState = zhouyuAgent.invoke(input);
+//            Optional<OverAllState> overAllState = zhouyuAgent.invoke(input);
+            Optional<OverAllState> overAllState = complexWorkflow.invoke(input);
             return overAllState.orElseThrow().data();
         } catch (GraphRunnerException e) {
             throw new RuntimeException();

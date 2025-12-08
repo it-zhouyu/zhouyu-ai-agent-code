@@ -285,6 +285,55 @@ public class AgentApplication {
 
     }
 
+    @Bean
+    public SequentialAgent complexWorkflow(ChatModel chatModel) throws GraphStateException {
+        // 1. 创建研究Agent（作为工具）
+        ReactAgent researchAgent = ReactAgent.builder()
+                .name("research_agent")
+                .model(chatModel)
+                .description("进行背景研究")
+                .outputKey("research_result")
+                .build();
+
+        // 2. 创建多个并行创作Agent
+        ReactAgent proseAgent = ReactAgent.builder()
+                .name("prose_agent")
+                .model(chatModel)
+                .outputKey("prose")
+                .build();
+
+        ReactAgent poemAgent = ReactAgent.builder()
+                .name("poem_agent")
+                .model(chatModel)
+                .outputKey("poem")
+                .build();
+
+        ParallelAgent creativeAgent = ParallelAgent.builder()
+                .name("creative_agent")
+                .subAgents(List.of(proseAgent, poemAgent))
+                .mergeOutputKey("creative_outputs")
+                .build();
+
+        // 3. 创建评审Agent
+        ReactAgent reviewAgent = ReactAgent.builder()
+                .name("review_agent")
+                .model(chatModel)
+                .outputKey("final_review")
+                .build();
+
+        // 4. 组合成顺序工作流
+        SequentialAgent complexWorkflow = SequentialAgent.builder()
+                .name("complex_workflow")
+                .description("研究 -> 并行创作 -> 评审")
+                .subAgents(List.of(
+                        researchAgent, // 步骤1：研究
+                        creativeAgent, // 步骤2：并行创作
+                        reviewAgent // 步骤3：评审
+                ))
+                .build();
+        return complexWorkflow;
+    }
+
     public static void main(String[] args) {
         SpringApplication.run(AgentApplication.class, args);
     }
