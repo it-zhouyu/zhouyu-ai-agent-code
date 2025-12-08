@@ -5,6 +5,7 @@ import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.action.InterruptionMetadata;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
+import com.alibaba.cloud.ai.graph.agent.flow.agent.ParallelAgent;
 import com.alibaba.cloud.ai.graph.agent.flow.agent.SequentialAgent;
 import com.alibaba.cloud.ai.graph.checkpoint.Checkpoint;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
@@ -218,10 +219,14 @@ public class AgentController {
     @Autowired
     private SequentialAgent sequentialAgent;
 
-    @GetMapping("/sequential")
-    public Map<String, Object> sequential(String input) {
+    @Autowired
+    private ParallelAgent parallelAgent;
+
+    @GetMapping("/multiAgent")
+    public Map<String, Object> multiAgent(String input) {
         try {
-            Optional<OverAllState> overAllState = sequentialAgent.invoke(input);
+//            Optional<OverAllState> overAllState = sequentialAgent.invoke(input);
+            Optional<OverAllState> overAllState = parallelAgent.invoke(input);
             return overAllState.orElseThrow().data();
         } catch (GraphRunnerException e) {
             throw new RuntimeException();
