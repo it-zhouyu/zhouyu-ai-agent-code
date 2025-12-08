@@ -24,6 +24,7 @@ import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.exception.GraphStateException;
 import com.alibaba.cloud.ai.graph.store.StoreItem;
 import com.alibaba.cloud.ai.graph.store.stores.MemoryStore;
+import com.zhouyu.agent.ZhouyuAgent;
 import com.zhouyu.hooks.LoggingHook;
 import com.zhouyu.hooks.ZhouyuModelHook;
 import com.zhouyu.interceptor.ZhouyuModelInterceptor;
@@ -259,6 +260,28 @@ public class AgentApplication {
                 .build();
 
         return llmRoutingAgent;
+
+    }
+
+    @Bean
+    public ZhouyuAgent zhouyuAgent(ChatModel chatModel) throws GraphStateException {
+
+        ReactAgent planAgent = ReactAgent.builder()
+                .name("planAgent")
+                .model(chatModel)
+                .systemPrompt("根据用户需求制定执行计划，你只负责制定计划，不要执行计划")
+                .outputKey("planResult")
+                .build();
+
+        ReactAgent executeAgent = ReactAgent.builder()
+                .name("executeAgent")
+                .model(chatModel)
+                .systemPrompt("根据执行计划执行任务")
+                .build();
+
+        ZhouyuAgent zhouyuAgent = new ZhouyuAgent("zhouyuAgent", "", null, List.of(planAgent, executeAgent));
+
+        return zhouyuAgent;
 
     }
 
