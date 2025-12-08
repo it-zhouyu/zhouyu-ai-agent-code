@@ -13,6 +13,7 @@ import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.exception.GraphRunnerException;
 import com.alibaba.cloud.ai.graph.store.stores.MemoryStore;
 import com.alibaba.cloud.ai.graph.streaming.StreamingOutput;
+import com.zhouyu.agent.ZhouyuAgent;
 import com.zhouyu.tools.ZhouyuTools;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.ai.chat.client.ChatClient;
@@ -226,12 +227,16 @@ public class AgentController {
     @Autowired
     private LlmRoutingAgent llmRoutingAgent;
 
+    @Autowired
+    private ZhouyuAgent zhouyuAgent;
+
     @GetMapping("/multiAgent")
     public Map<String, Object> multiAgent(String input) {
         try {
 //            Optional<OverAllState> overAllState = sequentialAgent.invoke(input);
 //            Optional<OverAllState> overAllState = parallelAgent.invoke(input);
-            Optional<OverAllState> overAllState = llmRoutingAgent.invoke(input);
+//            Optional<OverAllState> overAllState = llmRoutingAgent.invoke(input);
+            Optional<OverAllState> overAllState = zhouyuAgent.invoke(input);
             return overAllState.orElseThrow().data();
         } catch (GraphRunnerException e) {
             throw new RuntimeException();
