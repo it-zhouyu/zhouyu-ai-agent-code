@@ -11,6 +11,7 @@ import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 
 /**
  * 作者：IT周瑜
@@ -64,5 +65,11 @@ public class ToolController {
             chatResponse = chatClient.prompt(new Prompt(toolExecutionResult.conversationHistory(), toolCallingChatOptions)).call().chatResponse();
         }
         return chatResponse.getResult().getOutput().getText();
+    }
+
+    @GetMapping(value = "/streamTool", produces = "text/html;charset=UTF-8")
+    public Flux<String> stream(String question) {
+        // 数据流
+        return chatClient.prompt(question).tools(new ZhouyuTools()).stream().content();
     }
 }

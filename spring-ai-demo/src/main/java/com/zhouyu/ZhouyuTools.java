@@ -17,13 +17,18 @@ public class ZhouyuTools {
     @Tool(description = "获取当前时间")
     LocalDateTime getCurrentDateTime() {
         System.out.println("获取当前时间");
-        throw new RuntimeException("获取当前时间异常");
-//        return LocalDateTime.now();
+//        throw new RuntimeException("获取当前时间异常");
+        return LocalDateTime.now();
     }
 
     @Tool(description = "用指定时间设置闹钟")
     void setAlarm(AlarmRequest alarmRequest) {
         System.out.println("地址：" + alarmRequest.getAddress());
         System.out.println("闹钟时间为：" + alarmRequest.getTime());
+    }
+
+    @Tool(description = "将生成的代码保存")
+    void saveCode(String code) {
+        System.out.println("保存代码：" + code);
     }
 }
