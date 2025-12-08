@@ -5,6 +5,7 @@ import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.action.InterruptionMetadata;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
+import com.alibaba.cloud.ai.graph.agent.flow.agent.LlmRoutingAgent;
 import com.alibaba.cloud.ai.graph.agent.flow.agent.ParallelAgent;
 import com.alibaba.cloud.ai.graph.agent.flow.agent.SequentialAgent;
 import com.alibaba.cloud.ai.graph.checkpoint.Checkpoint;
@@ -222,11 +223,15 @@ public class AgentController {
     @Autowired
     private ParallelAgent parallelAgent;
 
+    @Autowired
+    private LlmRoutingAgent llmRoutingAgent;
+
     @GetMapping("/multiAgent")
     public Map<String, Object> multiAgent(String input) {
         try {
 //            Optional<OverAllState> overAllState = sequentialAgent.invoke(input);
-            Optional<OverAllState> overAllState = parallelAgent.invoke(input);
+//            Optional<OverAllState> overAllState = parallelAgent.invoke(input);
+            Optional<OverAllState> overAllState = llmRoutingAgent.invoke(input);
             return overAllState.orElseThrow().data();
         } catch (GraphRunnerException e) {
             throw new RuntimeException();
