@@ -1,9 +1,11 @@
 package com.zhouyu;
 
 import com.alibaba.cloud.ai.graph.NodeOutput;
+import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.RunnableConfig;
 import com.alibaba.cloud.ai.graph.action.InterruptionMetadata;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
+import com.alibaba.cloud.ai.graph.agent.flow.agent.SequentialAgent;
 import com.alibaba.cloud.ai.graph.checkpoint.Checkpoint;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.exception.GraphRunnerException;
@@ -210,6 +212,19 @@ public class AgentController {
             return assistantMessage.getText();
         } catch (GraphRunnerException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Autowired
+    private SequentialAgent sequentialAgent;
+
+    @GetMapping("/sequential")
+    public Map<String, Object> sequential(String input) {
+        try {
+            Optional<OverAllState> overAllState = sequentialAgent.invoke(input);
+            return overAllState.orElseThrow().data();
+        } catch (GraphRunnerException e) {
+            throw new RuntimeException();
         }
     }
 

@@ -4,6 +4,7 @@ import com.alibaba.cloud.ai.graph.CompiledGraph;
 import com.alibaba.cloud.ai.graph.GraphRepresentation;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.agent.extension.interceptor.FilesystemInterceptor;
+import com.alibaba.cloud.ai.graph.agent.flow.agent.SequentialAgent;
 import com.alibaba.cloud.ai.graph.agent.hook.Hook;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.HumanInTheLoopHook;
 import com.alibaba.cloud.ai.graph.agent.hook.hip.ToolConfig;
@@ -18,6 +19,7 @@ import com.alibaba.cloud.ai.graph.agent.interceptor.todolist.TodoListInterceptor
 import com.alibaba.cloud.ai.graph.agent.interceptor.toolselection.ToolSelectionInterceptor;
 import com.alibaba.cloud.ai.graph.agent.tools.ShellTool;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
+import com.alibaba.cloud.ai.graph.exception.GraphStateException;
 import com.alibaba.cloud.ai.graph.store.StoreItem;
 import com.alibaba.cloud.ai.graph.store.stores.MemoryStore;
 import com.zhouyu.hooks.LoggingHook;
@@ -175,6 +177,31 @@ public class AgentApplication {
                 .saver(new MemorySaver())
                 .build();
         return agent;
+    }
+
+    @Bean
+    public SequentialAgent sequentialAgent(ChatModel chatModel) throws GraphStateException {
+
+        ReactAgent planAgent = ReactAgent.builder()
+                .name("planAgent")
+                .model(chatModel)
+                .systemPrompt("根据用户需求制定执行计划，你只负责制定计划，不要执行计划")
+                .outputKey("planResult")
+                .build();
+
+        ReactAgent executeAgent = ReactAgent.builder()
+                .name("executeAgent")
+                .model(chatModel)
+                .systemPrompt("根据执行计划执行任务")
+                .build();
+
+        SequentialAgent sequentialAgent = SequentialAgent.builder()
+                .name("sequentialAgent")
+                .subAgents(List.of(planAgent, executeAgent))
+                .build();
+
+        return sequentialAgent;
+
     }
 
     public static void main(String[] args) {
