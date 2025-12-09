@@ -233,6 +233,9 @@ public class AgentController {
     @Autowired
     private SequentialAgent complexWorkflow;
 
+    @Autowired
+    private ReactAgent toolAgent;
+
     @GetMapping("/multiAgent")
     public Map<String, Object> multiAgent(String input) {
         try {
@@ -240,7 +243,8 @@ public class AgentController {
 //            Optional<OverAllState> overAllState = parallelAgent.invoke(input);
 //            Optional<OverAllState> overAllState = llmRoutingAgent.invoke(input);
 //            Optional<OverAllState> overAllState = zhouyuAgent.invoke(input);
-            Optional<OverAllState> overAllState = complexWorkflow.invoke(input);
+//            Optional<OverAllState> overAllState = complexWorkflow.invoke(input);
+            Optional<OverAllState> overAllState = toolAgent.invoke(input);
             return overAllState.orElseThrow().data();
         } catch (GraphRunnerException e) {
             throw new RuntimeException();

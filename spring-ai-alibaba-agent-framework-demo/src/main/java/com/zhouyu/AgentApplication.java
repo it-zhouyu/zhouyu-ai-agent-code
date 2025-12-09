@@ -2,6 +2,8 @@ package com.zhouyu;
 
 import com.alibaba.cloud.ai.graph.CompiledGraph;
 import com.alibaba.cloud.ai.graph.GraphRepresentation;
+import com.alibaba.cloud.ai.graph.agent.AgentTool;
+import com.alibaba.cloud.ai.graph.agent.MessageToolCallResultConverter;
 import com.alibaba.cloud.ai.graph.agent.ReactAgent;
 import com.alibaba.cloud.ai.graph.agent.extension.interceptor.FilesystemInterceptor;
 import com.alibaba.cloud.ai.graph.agent.flow.agent.LlmRoutingAgent;
@@ -24,6 +26,7 @@ import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.exception.GraphStateException;
 import com.alibaba.cloud.ai.graph.store.StoreItem;
 import com.alibaba.cloud.ai.graph.store.stores.MemoryStore;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.zhouyu.agent.ZhouyuAgent;
 import com.zhouyu.hooks.LoggingHook;
 import com.zhouyu.hooks.ZhouyuModelHook;
@@ -32,10 +35,13 @@ import com.zhouyu.interceptor.ZhouyuToolInterceptor;
 import com.zhouyu.tools.DateTool;
 import com.zhouyu.tools.StoreTool;
 import com.zhouyu.tools.ZhouyuTools;
+import lombok.Data;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.function.FunctionToolCallback;
+import org.springframework.ai.util.json.schema.JsonSchemaGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -285,6 +291,7 @@ public class AgentApplication {
 
     }
 
+
     @Bean
     public SequentialAgent complexWorkflow(ChatModel chatModel) throws GraphStateException {
         // 1. 创建研究Agent（作为工具）
@@ -332,6 +339,40 @@ public class AgentApplication {
                 ))
                 .build();
         return complexWorkflow;
+    }
+
+
+    @Bean
+    public ReactAgent toolAgent(ChatModel chatModel) throws GraphStateException {
+
+        ReactAgent planAgent = ReactAgent.builder()
+                .name("planAgent")
+                .model(chatModel)
+                .systemPrompt("根据用户需求制定执行计划，你只负责制定计划，不要执行计划")
+                .outputKey("planResult")
+                .inputType(PlanRequest.class)
+                .build();
+
+        ReactAgent executeAgent = ReactAgent.builder()
+                .name("executeAgent")
+                .model(chatModel)
+                .systemPrompt("根据执行计划执行任务")
+                .build();
+
+        ReactAgent toolAgent = ReactAgent.builder()
+                .name("toolAgent")
+                .model(chatModel)
+                .tools(AgentTool.getFunctionToolCallback(planAgent), AgentTool.getFunctionToolCallback(executeAgent))
+                .build();
+
+        return toolAgent;
+
+    }
+
+    @Data
+    static class PlanRequest {
+        @JsonPropertyDescription("用户需求")
+        private String userInput;
     }
 
     public static void main(String[] args) {
