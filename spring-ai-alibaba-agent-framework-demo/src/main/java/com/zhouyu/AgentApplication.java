@@ -26,6 +26,7 @@ import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.exception.GraphStateException;
 import com.alibaba.cloud.ai.graph.store.StoreItem;
 import com.alibaba.cloud.ai.graph.store.stores.MemoryStore;
+import com.alibaba.cloud.ai.toolcalling.tavily.TavilySearchService;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.zhouyu.agent.ZhouyuAgent;
 import com.zhouyu.hooks.LoggingHook;
@@ -33,6 +34,7 @@ import com.zhouyu.hooks.ZhouyuModelHook;
 import com.zhouyu.interceptor.ZhouyuModelInterceptor;
 import com.zhouyu.interceptor.ZhouyuToolInterceptor;
 import com.zhouyu.tools.DateTool;
+import com.zhouyu.tools.RagTool;
 import com.zhouyu.tools.StoreTool;
 import com.zhouyu.tools.ZhouyuTools;
 import lombok.Data;
@@ -42,6 +44,7 @@ import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.function.FunctionToolCallback;
 import org.springframework.ai.util.json.schema.JsonSchemaGenerator;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -373,6 +376,30 @@ public class AgentApplication {
     static class PlanRequest {
         @JsonPropertyDescription("用户需求")
         private String userInput;
+    }
+
+    @Bean
+    public ReactAgent ragAgent(ChatModel chatModel, VectorStore vectorStore, TavilySearchService tavilySearchService) throws GraphStateException {
+
+        ToolCallback webSearchTool = FunctionToolCallback
+                .builder("webSearchTool", tavilySearchService)
+                .description("web搜索工具")
+                .inputType(TavilySearchService.Request.class)
+                .build();
+
+        ToolCallback[] toolCallbacks = ToolCallbacks.from(new RagTool(vectorStore));
+
+        List<ToolCallback> list = new ArrayList<>(Arrays.asList(toolCallbacks));
+        list.add(webSearchTool);
+
+        ReactAgent ragAgent = ReactAgent.builder()
+                .name("ragAgent")
+                .model(chatModel)
+                .tools(list)
+                .systemPrompt("你是一个客服助手，利用外部搜索和内部知识库搜索工具得到搜索结果（api_key需要查内部知识库），然后再利用搜索结果回答用户问题")
+                .build();
+
+        return ragAgent;
     }
 
     public static void main(String[] args) {
