@@ -27,6 +27,8 @@
         <module>ai-deepresearch</module>
         <module>ai-data</module>
         <module>spring-ai-alibaba-agent-framework-demo</module>
+        <module>a2a-server-demo</module>
+        <module>a2a-client-demo</module>
     </modules>
 
     <properties>

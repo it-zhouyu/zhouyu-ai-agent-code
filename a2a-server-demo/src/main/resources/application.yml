@@ -1,0 +1,30 @@
+spring:
+  ai:
+    alibaba:
+      a2a:
+        nacos:
+          server-addr: 127.0.0.1:8848
+          username: nacos
+          password: nacos
+          discovery:
+            enabled: true   # 启用服务发现（查询其他 Agent）
+          registry:
+            enabled: true   # 启用服务注册（注册本地 Agent）
+        server:
+          version: 1.0.0
+          card:
+            name: weatherAgent
+            description: 专门用于获取天气的智能体
+            capabilities:
+              streaming: false
+            provider:
+              name: Zhouyu
+              organization: Zhouyu Organization
+              url: https://github.com/zhouyu
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY}
+      chat:
+        options:
+          model: qwen3-max
+server:
+  port: 8081

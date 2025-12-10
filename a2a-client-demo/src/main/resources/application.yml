@@ -1,0 +1,19 @@
+spring:
+  ai:
+    alibaba:
+      a2a:
+        nacos:
+          server-addr: 127.0.0.1:8848
+          username: nacos
+          password: nacos
+          discovery:
+            enabled: true   # 启用服务发现（查询其他 Agent）
+          registry:
+            enabled: false   # 启用服务注册（注册本地 Agent）
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY}
+      chat:
+        options:
+          model: qwen3-max
+server:
+  port: 8082
