@@ -29,6 +29,7 @@
         <module>spring-ai-alibaba-agent-framework-demo</module>
         <module>a2a-server-demo</module>
         <module>a2a-client-demo</module>
+        <module>ai-engineer</module>
     </modules>
 
     <properties>
