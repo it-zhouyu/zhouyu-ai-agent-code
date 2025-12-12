@@ -30,6 +30,7 @@
         <module>a2a-server-demo</module>
         <module>a2a-client-demo</module>
         <module>ai-engineer</module>
+        <module>ai-multi-model</module>
     </modules>
 
     <properties>

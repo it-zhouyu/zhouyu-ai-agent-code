@@ -1,0 +1,18 @@
+spring:
+  ai:
+#    openai:
+#      api-key: 7146488ea4ec0450122db13bcb4ae708.VwndoU9vyYQ52aLv
+#      base-url: https://open.bigmodel.cn/api/paas/v4/
+#      image:
+#        images-path: images/generations
+#      chat:
+#        completions-path: chat/completions
+
+#       base-url: https://dashscope.aliyuncs.com/compatible-mode
+#       api-key: ${DASHSCOPE_API_KEY}
+      dashscope:
+        api-key: ${DASHSCOPE_API_KEY}
+
+
+server:
+  port: 8081
