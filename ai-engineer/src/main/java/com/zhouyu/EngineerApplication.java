@@ -35,6 +35,7 @@ public class EngineerApplication {
                 .name("architectAgent")
                 .model(chatModel)
                 .tools(ToolCallbacks.from(new FileTool()))
+                .hooks(new ZhouyuAgentHook())
                 .systemPrompt("""
                         你是一名资深架构师，负责进行架构设计
                         
@@ -61,6 +62,7 @@ public class EngineerApplication {
                 .name("backendAgent")
                 .model(chatModel)
                 .tools(ToolCallbacks.from(new FileTool()))
+                .hooks(new ZhouyuAgentHook())
                 .systemPrompt("""
                         你是一名资深后端开发工程师，负责实现后端代码
                         
@@ -89,6 +91,7 @@ public class EngineerApplication {
                 .model(chatModel)
                 .tools(ToolCallbacks.from(new FileTool()))
                 .interceptors(contextEditingInterceptor)
+                .hooks(new ZhouyuAgentHook())
                 .systemPrompt("""
                         你是一名资深前端开发工程师，负责实现前端代码
                         
@@ -106,10 +109,37 @@ public class EngineerApplication {
     }
 
     @Bean
-    public SequentialAgent sequentialAgent(ReactAgent architectAgent, ReactAgent backendAgent, ReactAgent frontendAgent) throws GraphStateException {
+    public ReactAgent reviewAgent(ChatModel chatModel) {
+        ContextEditingInterceptor contextEditingInterceptor = ContextEditingInterceptor.builder()
+                .trigger(1000)
+                .clearToolInputs(true)
+                .build();
+
+        return ReactAgent.builder()
+                .name("reviewAgent")
+                .model(chatModel)
+                .tools(ToolCallbacks.from(new FileTool()))
+                .interceptors(contextEditingInterceptor)
+                .hooks(new ZhouyuAgentHook())
+                .systemPrompt("""
+                        你是一名资深代码Review工程师
+                        
+                        # 职责
+                        - 只对后端代码进行Review
+                        - 生成Review报告并保存到本地文件系统
+                        
+                        # 注意
+                        - 项目工作目录为：{workspace}
+                        - 逐个调用工具，不要一次性调用多个工具
+                        """.replace("{workspace}", "./zhouyu-code"))
+                .build();
+    }
+
+    @Bean
+    public SequentialAgent sequentialAgent(ReactAgent architectAgent, ReactAgent backendAgent, ReactAgent frontendAgent, ReactAgent reviewAgent) throws GraphStateException {
         return SequentialAgent.builder()
                 .name("sequentialAgent")
-                .subAgents(List.of(architectAgent, backendAgent, frontendAgent))
+                .subAgents(List.of(architectAgent, backendAgent, frontendAgent, reviewAgent))
                 .build();
     }
 
