@@ -108,6 +108,8 @@ public class EngineerApplication {
                 .build();
     }
 
+    // React
+
     @Bean
     public ReactAgent reviewAgent(ChatModel chatModel) {
         ContextEditingInterceptor contextEditingInterceptor = ContextEditingInterceptor.builder()
@@ -143,25 +145,65 @@ public class EngineerApplication {
                 .build();
     }
 
+    @Bean
+    public ReactAgent plannerAgent(ChatModel chatModel) {
+        return ReactAgent.builder()
+                .name("plannerAgent")
+                .model(chatModel)
+                .systemPrompt("""
+                        你是一名高级系统规划师，主要职责是根据提供的Agent信息和用户需求生成具体的执行计划：
+                        
+                        可用的Agent信息：
+                        - architectAgent: 负责系统架构设计、技术选型、接口设计
+                        - backendAgent: 负责后端应用开发
+                        - frontendAgent: 负责前端应用开发
+                        - reviewAgent: 负责代码审查
+                        
+                        注意：
+                        - 输出结果中不要包含```json
+                        - 除开architectAgent需要生成架构方案，其他Agent都只需要读取架构方案，不要自己再生成架构方案
+                        
+                        输出格式（必须是有效的JSON对象）:
+                          ```java
+                                public class Plan {
+                                  private List<Step> steps;
+                                }
+                                public class Step {
+                                   private String stepNum;
+                                   private String agentName;
+                                   private String prompt;  // 输入给子Agent的提示词，不需要很详细，只需要告诉子Agent要根据架构方案来实现
+                                }
+                          ```
+                        """)
+                .build();
+    }
+
     public static void main(String[] args) {
         ConfigurableApplicationContext applicationContext = SpringApplication.run(EngineerApplication.class, args);
 //        ReactAgent architectAgent = applicationContext.getBean("architectAgent", ReactAgent.class);
-        SequentialAgent sequentialAgent = applicationContext.getBean("sequentialAgent", SequentialAgent.class);
+//        SequentialAgent sequentialAgent = applicationContext.getBean("sequentialAgent", SequentialAgent.class);
 
-        try {
-//            Flux<NodeOutput> outputFlux = architectAgent.stream("开发一个最简单的登录功能，使用Java和Vue.js，不需要考虑安全");
-            Flux<NodeOutput> outputFlux = sequentialAgent.stream("开发一个最简单的登录功能，使用Java和Vue.js，不需要考虑安全");
-            outputFlux.subscribe(output -> {
-                if (output instanceof StreamingOutput<?> streamingOutput) {
-                    if (streamingOutput.message() != null) {
-                        System.out.print(streamingOutput.message().getText());
-                    }
-                }
-            });
-        } catch (GraphRunnerException e) {
-            throw new RuntimeException(e);
-        }
+//        try {
+////            Flux<NodeOutput> outputFlux = architectAgent.stream("开发一个最简单的登录功能，使用Java和Vue.js，不需要考虑安全");
+//            Flux<NodeOutput> outputFlux = sequentialAgent.stream("开发一个最简单的登录功能，使用Java和Vue.js，不需要考虑安全");
+//            outputFlux.subscribe(output -> {
+//                if (output instanceof StreamingOutput<?> streamingOutput) {
+//                    if (streamingOutput.message() != null) {
+//                        System.out.print(streamingOutput.message().getText());
+//                    }
+//                }
+//            });
+//        } catch (GraphRunnerException e) {
+//            throw new RuntimeException(e);
+//        }
 
+
+        PlannerAgentService plannerAgentService = applicationContext.getBean(PlannerAgentService.class);
+        Plan plan = plannerAgentService.plan("开发一个最简单的登录功能，使用Java和Vue.js，不需要考虑安全");
+        System.out.println(plan);
+
+        String result = plannerAgentService.execute(plan);
+        System.out.println(result);
 
     }
 }
