@@ -41,8 +41,8 @@ public class OrderService {
 
     private void initMockProducts() {
         productStorage.put(1L, new Product(1L, "iPhone 15 Pro", new BigDecimal("7999.00"), "最新款iPhone，支持5G，A17 Pro芯片"));
-        productStorage.put(2L, new Product(2L, "iPhone 15", new BigDecimal("5999.00"), "iPhone 15标准版，A16仿生芯片"));
-        productStorage.put(3L, new Product(3L, "iPhone 14", new BigDecimal("4999.00"), "iPhone 14，A15仿生芯片"));
+        productStorage.put(2L, new Product(3L, "iPhone 15", new BigDecimal("5999.00"), "iPhone 15标准版，A16仿生芯片"));
+        productStorage.put(3L, new Product(2L, "iPhone 14", new BigDecimal("4999.00"), "iPhone 14，A15仿生芯片"));
         productStorage.put(4L, new Product(4L, "MacBook Pro 14", new BigDecimal("15999.00"), "专业笔记本电脑，M3 Pro芯片"));
         productStorage.put(5L, new Product(5L, "MacBook Air", new BigDecimal("8999.00"), "轻薄笔记本电脑，M2芯片"));
         productStorage.put(6L, new Product(6L, "AirPods Pro", new BigDecimal("1999.00"), "无线蓝牙耳机，主动降噪"));
