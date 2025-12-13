@@ -17,9 +17,9 @@ spring:
       embedding:
         options:
           model: text-embedding-v4
-    vectorstore:
-      elasticsearch:
-        initialize-schema: true
-        index-name: ai-order-index
-        dimensions: 1024
-        similarity: cosine
+#    vectorstore:
+#      elasticsearch:
+#        initialize-schema: true
+#        index-name: ai-order-index
+#        dimensions: 1024
+#        similarity: cosine

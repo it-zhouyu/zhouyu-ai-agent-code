@@ -82,6 +82,7 @@ public class AIOrderController {
                 
                 # 其他注意事项
                 - 不要编造其他商品，只能基于商品库中的商品信息回答问题或创建订单
+                - 退款成功后，如果需要告知一些售后信息请调用售后信息查看工具（customerInfoSearch）获取，该工具的入参需要你生成，比如退款到账时间是多久
                 
                 # 用户基本信息
                 - 用户ID: 1010
@@ -114,6 +115,12 @@ public class AIOrderController {
     @GetMapping("/initProduct")
     public String initProduct() {
         orderService.initProductVector();
+        return "success";
+    }
+
+    @GetMapping("/initCustomer")
+    public String initCustomer() {
+        orderService.initCustomerVector();
         return "success";
     }
 

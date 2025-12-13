@@ -6,6 +6,7 @@ import com.zhouyu.entity.Order;
 import com.zhouyu.entity.OrderItem;
 import com.zhouyu.entity.Product;
 import com.zhouyu.enums.OrderStatus;
+import com.zhouyu.parser.OrderDocumentParser;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -33,7 +34,13 @@ public class OrderService {
     private final Map<Long, Product> productStorage = new ConcurrentHashMap<>();
 
     @Autowired
-    private VectorStore vectorStore;
+    private VectorStore productVectorStore;
+
+    @Autowired
+    private VectorStore customerVectorStore;
+
+    @Autowired
+    private OrderDocumentParser orderDocumentParser;
 
     public OrderService() {
         initMockProducts();
@@ -143,11 +150,18 @@ public class OrderService {
             metadata.put("price", product.getPrice());
             return new Document(content, metadata);
         }).toList();
-        vectorStore.add(documentList);
+        productVectorStore.add(documentList);
+    }
+
+    public void initCustomerVector() {
+        List<Document> documents = orderDocumentParser.parse();
+        for (int i = 0; i < documents.size(); i += 5) {
+            customerVectorStore.add(documents.subList(i, Math.min(i + 5, documents.size())));
+        }
     }
 
     public List<Product> searchProducts(String question, String keyword) {
-        List<Document> documents = vectorStore.similaritySearch(SearchRequest.builder()
+        List<Document> documents = productVectorStore.similaritySearch(SearchRequest.builder()
                 .query(question)
                 .topK(5)
                 .build());
@@ -169,5 +183,12 @@ public class OrderService {
         result.addAll(keywordResult);
 
         return result;
+    }
+
+    public List<Document> searchCustomerVector(String question) {
+        return customerVectorStore.similaritySearch(SearchRequest.builder()
+                .query(question)
+                .topK(5)
+                .build());
     }
 }

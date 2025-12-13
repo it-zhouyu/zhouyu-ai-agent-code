@@ -9,6 +9,7 @@ import com.zhouyu.service.OrderService;
 import lombok.extern.java.Log;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.ai.chat.model.ToolContext;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,6 +72,12 @@ public class OrderTool {
         } catch (Exception e) {
             return new PaymentResponse(false, "订单退款失败: " + e.getMessage(), null);
         }
+    }
+
+    @Tool(description = "售后信息查看工具")
+    public List<Document> customerInfoSearch(String question) {
+        log.info("售后信息查看工具被调用: {}", question);
+        return orderService.searchCustomerVector(question);
     }
 
     public Map<String, SessionStatus> getSessionContext() {
