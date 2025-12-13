@@ -1,5 +1,6 @@
 package com.zhouyu.controller;
 
+import com.zhouyu.enums.SessionStatus;
 import com.zhouyu.service.OrderService;
 import com.zhouyu.tool.OrderTool;
 import org.springframework.ai.chat.client.ChatClient;
@@ -59,6 +60,7 @@ public class AIOrderController {
                 - 先理解客户需求
                 - 根据客户需求从商品库中查找并推荐合适商品
                 - 客户确定了购买的商品后帮助客户创建订单
+                - 订单创建好了之后就进行订单支付
 
                 # 推荐商品注意事项
                 - 推荐商品要符合用户需求
@@ -70,9 +72,13 @@ public class AIOrderController {
                 - 创建订单前如果信息不足可以寻问客户补充信息
                 - 创建订单前一定要让客户先确认订单信息
                 
+                # 支付订单注意事项
+                - 支付订单前一定要让客户先确认是否自动扣款
+                
                 # 工具调用注意事项
                 - 推荐商品信息工具（searchProducts）只有在不确定用户需求时才调用，如果用户已经确定了需求则不需要调用
                 - 创建订单工具（createOrder）必须在用户确认了订单信息后才能调用
+                - 订单支付工具（payOrder）必须在用户确认之后才能调用
                 
                 # 其他注意事项
                 - 不要编造其他商品，只能基于商品库中的商品信息回答问题或创建订单
@@ -86,6 +92,7 @@ public class AIOrderController {
                 .system(systemPrompt)
                 .user(question)
                 .tools(orderTool)
+                .toolContext(Map.of("chatId", chatId))
                 .advisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
                 .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, chatId))
                 .stream()
@@ -107,6 +114,12 @@ public class AIOrderController {
     @GetMapping("/initProduct")
     public String initProduct() {
         orderService.initProductVector();
+        return "success";
+    }
+
+    @GetMapping("/confirmPay")
+    public String confirmPay(String chatId){
+        orderTool.getSessionContext().put(chatId, SessionStatus.CONFIRMING_PAYMENT);
         return "success";
     }
 }
