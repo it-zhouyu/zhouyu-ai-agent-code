@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能订单系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        // 配置marked.js以支持更完整的Markdown功能
+        marked.setOptions({
+            gfm: true,           // 启用GitHub Flavored Markdown
+            tables: true,        // 启用表格
+            breaks: true,        // 启用换行
+            pedantic: false,     // 不启用严格模式
+            sanitize: false,     // 不启用HTML安全过滤
+            smartLists: true,    // 启用智能列表
+            smartypants: false   // 不启用智能引号
+        });
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 100%;
+        }
+
+        .header {
+            background-color: #202123;
+            color: white;
+            padding: 16px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            background-color: #f5f5f5;
+        }
+
+        .message {
+            padding: 20px 0;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .user-message {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .ai-message {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .user-message .message-header {
+            color: #202123;
+        }
+
+        .ai-message .message-header {
+            color: #44475a;
+        }
+
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 2px;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .user-avatar {
+            background-color: #5436da;
+            color: white;
+        }
+
+        .ai-avatar {
+            background-color: #10a37f;
+            color: white;
+        }
+
+        .message-content {
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* Markdown 内容样式优化 */
+        .message-content h1,
+        .message-content h2,
+        .message-content h3,
+        .message-content h4,
+        .message-content h5,
+        .message-content h6 {
+            margin: 20px 0 12px 0;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        .message-content h2 {
+            font-size: 1.5em;
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+            color: #000;
+        }
+
+        .message-content h3 {
+            font-size: 1.25em;
+            color: #000;
+        }
+
+        .message-content h4 {
+            font-size: 1em;
+            color: #000;
+        }
+
+        .message-content p {
+            margin: 12px 0;
+            line-height: 1.6;
+        }
+
+        .message-content ul,
+        .message-content ol {
+            padding-left: 2em;
+            margin: 12px 0;
+        }
+
+        .message-content li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .message-content ul li {
+            list-style-type: disc;
+        }
+
+        .message-content ol li {
+            list-style-type: decimal;
+        }
+
+        .message-content pre {
+            background-color: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 16px 0;
+            border: 1px solid #e1e4e8;
+            font-size: 0.9em;
+        }
+
+        .message-content code {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            background-color: rgba(27, 31, 35, 0.05);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .message-content pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            font-size: 1em;
+        }
+
+        .message-content blockquote {
+            border-left: 4px solid #dfe2e5;
+            padding: 0 1em;
+            margin: 16px 0;
+            color: #6a737d;
+        }
+
+        .message-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 16px 0;
+        }
+
+        .message-content table th,
+        .message-content table td {
+            padding: 6px 13px;
+            border: 1px solid #dfe2e5;
+        }
+
+        .message-content table tr:nth-child(2n) {
+            background-color: #f6f8fa;
+        }
+
+        .message-content table th {
+            background-color: #f0f4f8;
+            font-weight: 600;
+        }
+
+        .message-content a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        .message-content a:hover {
+            text-decoration: underline;
+        }
+
+        .message-content hr {
+            height: 0.25em;
+            padding: 0;
+            margin: 24px 0;
+            background-color: #e1e4e8;
+            border: 0;
+        }
+
+        .input-container {
+            padding: 20px;
+            background-color: #ffffff;
+            border-top: 1px solid #e5e5e5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .input-box {
+            width: 100%;
+            max-width: 800px;
+            position: relative;
+        }
+
+        #inputField {
+            width: 100%;
+            padding: 12px 48px 12px 16px;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: none;
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+            max-height: 200px;
+            min-height: 56px;
+        }
+
+        #inputField:focus {
+            border-color: #10a37f;
+            box-shadow: 0 0 0 1px #10a37f, 0 0 0 3px rgba(16, 163, 127, 0.1);
+        }
+
+        #submitBtn {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            background-color: #10a37f;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #submitBtn:hover {
+            background-color: #0d8a6a;
+        }
+
+        #submitBtn:disabled {
+            background-color: #98d9cc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6e6e80;
+        }
+
+        .welcome-message h2 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #202123;
+        }
+
+        .welcome-message p {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .examples {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .example-item {
+            background-color: #f0f4f8;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #44475a;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .example-item:hover {
+            background-color: #e0e7ee;
+        }
+
+        .error {
+            color: #ef4444;
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            智能系统
+        </div>
+        <div class="chat-container" id="chatContainer">
+            <div class="welcome-message" id="welcomeMessage">
+                <h2>智能订单助手</h2>
+                <p>请描述你的症状，系统会告诉你应该挂哪个科</p>
+            </div>
+        </div>
+        <div class="input-container">
+            <div class="input-box">
+                <textarea 
+                    id="inputField" 
+                    placeholder="请描述你的症状"
+                ></textarea>
+                <button id="submitBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M22 2L11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class WeeklyReportClient {
+            constructor() {
+                this.eventSource = null;
+                this.reportContent = '';
+                this.currentAiMessageElement = null;
+                this.currentAiContentElement = null;
+            }
+
+            // 添加消息到聊天界面
+            addMessage(role, content) {
+                const chatContainer = document.getElementById('chatContainer');
+                const welcomeMessage = document.getElementById('welcomeMessage');
+                
+                // 隐藏欢迎消息
+                if (welcomeMessage) {
+                    welcomeMessage.style.display = 'none';
+                }
+
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `${role}-message message`;
+
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'message-header';
+
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = `avatar ${role}-avatar`;
+                avatarDiv.textContent = role === 'user' ? '我' : 'AI';
+
+                headerDiv.appendChild(avatarDiv);
+                headerDiv.appendChild(document.createTextNode(role === 'user' ? '你' : '订单助手'));
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.innerHTML = role === 'user' ? this.escapeHtml(content) : marked.parse(content);
+
+                messageDiv.appendChild(headerDiv);
+                messageDiv.appendChild(contentDiv);
+
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                return { messageDiv, contentDiv };
+            }
+
+            // 创建AI消息占位符
+            createAiMessagePlaceholder() {
+                const chatContainer = document.getElementById('chatContainer');
+                const welcomeMessage = document.getElementById('welcomeMessage');
+                
+                // 隐藏欢迎消息
+                if (welcomeMessage) {
+                    welcomeMessage.style.display = 'none';
+                }
+
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'ai-message message';
+
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'message-header';
+
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = 'avatar ai-avatar';
+                avatarDiv.textContent = 'AI';
+
+                headerDiv.appendChild(avatarDiv);
+                headerDiv.appendChild(document.createTextNode('订单助手'));
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+
+                messageDiv.appendChild(headerDiv);
+                messageDiv.appendChild(contentDiv);
+
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                this.currentAiMessageElement = messageDiv;
+                this.currentAiContentElement = contentDiv;
+                this.reportContent = '';
+            }
+
+            // 更新AI消息内容
+            updateAiMessageContent(content) {
+                if (this.currentAiContentElement) {
+                    this.reportContent += content;
+                    this.currentAiContentElement.innerHTML = marked.parse(this.reportContent);
+                    // 滚动到最新内容
+                    const chatContainer = document.getElementById('chatContainer');
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+            }
+
+            // 完成AI消息
+            completeAiMessage() {
+                this.currentAiMessageElement = null;
+                this.currentAiContentElement = null;
+                this.reportContent = '';
+            }
+
+            // 转义HTML
+            escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                
+                return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+            }
+
+            // 生成周报
+            generateReport(message) {
+                // 添加用户消息
+                this.addMessage('user', message);
+
+                // 创建AI消息占位符
+                this.createAiMessagePlaceholder();
+
+                // 禁用输入
+                const inputField = document.getElementById('inputField');
+                const submitBtn = document.getElementById('submitBtn');
+                inputField.disabled = true;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<div class="loading"></div>';
+
+                try {
+                    // 创建SSE连接
+                    const url = `/sse?chatId=1&question=${encodeURIComponent(message)}`;
+                    this.eventSource = new EventSource(url);
+
+                    this.eventSource.onmessage = (event) => {
+                        try {
+                            // event.data是一个json
+                            const data = JSON.parse(event.data);
+                            // 更新内容
+                            this.updateAiMessageContent(data.content);
+                        } catch (e) {
+                            console.error('解析消息错误:', e);
+                        }
+                    };
+
+                    this.eventSource.onerror = (error) => {
+                        // console.error('SSE连接错误:', error);
+                        this.closeConnection();
+                        
+                        // 显示错误信息
+                        // if (this.currentAiContentElement) {
+                        //     this.currentAiContentElement.innerHTML = '<div class="error">连接错误，请稍后重试</div>';
+                        // }
+
+                        // 恢复输入状态
+                        inputField.disabled = false;
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+                    };
+
+                    this.eventSource.addEventListener('end', () => {
+                        this.closeConnection();
+                        this.completeAiMessage();
+                        
+                        // 恢复输入状态
+                        inputField.disabled = false;
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+                    });
+
+                } catch (error) {
+                    console.error('发生错误:', error);
+                    
+                    // 显示错误信息
+                    if (this.currentAiContentElement) {
+                        this.currentAiContentElement.innerHTML = `<div class="error">发生错误: ${error.message}</div>`;
+                    }
+                    this.completeAiMessage();
+                    
+                    // 恢复输入状态
+                    inputField.disabled = false;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+                }
+            }
+
+            // 关闭连接
+            closeConnection() {
+                if (this.eventSource) {
+                    this.eventSource.close();
+                    this.eventSource = null;
+                }
+            }
+        }
+
+        // 填充输入框
+        function fillInput(text) {
+            document.getElementById('inputField').value = text;
+            document.getElementById('inputField').focus();
+        }
+
+        // 初始化客户端
+        const client = new WeeklyReportClient();
+
+        // 绑定事件
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            const inputText = document.getElementById('inputField').value.trim();
+            if (inputText) {
+                client.generateReport(inputText);
+                // 清空输入框
+                document.getElementById('inputField').value = '';
+            } else {
+                alert('请输入内容');
+            }
+        });
+
+        // 支持回车键提交（但允许Shift+Enter换行）
+        document.getElementById('inputField').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                document.getElementById('submitBtn').click();
+            }
+        });
+
+        // 自动调整textarea高度
+        document.getElementById('inputField').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    </script>
+</body>
+</html>

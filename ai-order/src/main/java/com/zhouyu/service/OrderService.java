@@ -6,12 +6,17 @@ import com.zhouyu.entity.Order;
 import com.zhouyu.entity.OrderItem;
 import com.zhouyu.entity.Product;
 import com.zhouyu.enums.OrderStatus;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,8 +29,11 @@ public class OrderService {
     private final Map<Long, Order> orderStorage = new ConcurrentHashMap<>();
     private final AtomicLong orderIdGenerator = new AtomicLong(1);
     private final AtomicLong itemIdGenerator = new AtomicLong(1);
-    
+
     private final Map<Long, Product> productStorage = new ConcurrentHashMap<>();
+
+    @Autowired
+    private VectorStore vectorStore;
 
     public OrderService() {
         initMockProducts();
@@ -95,7 +103,7 @@ public class OrderService {
         if (order.getStatus() != OrderStatus.PENDING) {
             throw new RuntimeException("订单状态不允许支付: " + order.getStatus().getDescription());
         }
-        
+
         order.setStatus(OrderStatus.PAID);
         order.setPayTime(LocalDateTime.now());
         return order;
@@ -106,7 +114,7 @@ public class OrderService {
         if (order.getStatus() == OrderStatus.PENDING || order.getStatus() == OrderStatus.CANCELLED) {
             throw new RuntimeException("订单状态不允许退款: " + order.getStatus().getDescription());
         }
-        
+
         order.setStatus(OrderStatus.REFUNDED);
         order.setRemark(order.getRemark() + " [退款原因: " + reason + "]");
         return order;
@@ -121,7 +129,45 @@ public class OrderService {
 
     private String generateOrderNo() {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        String random = String.valueOf((int)(Math.random() * 1000));
+        String random = String.valueOf((int) (Math.random() * 1000));
         return "ORD" + timestamp + String.format("%03d", Integer.parseInt(random));
+    }
+
+    public void initProductVector() {
+        List<Document> documentList = productStorage.values().stream().map(product -> {
+            String content = product.getName() + ": " + product.getDescription();
+            Map<String, Object> metadata = new HashMap<>();
+            metadata.put("productId", product.getId());
+            metadata.put("productName", product.getName());
+            metadata.put("description", product.getDescription());
+            metadata.put("price", product.getPrice());
+            return new Document(content, metadata);
+        }).toList();
+        vectorStore.add(documentList);
+    }
+
+    public List<Product> searchProducts(String question, String keyword) {
+        List<Document> documents = vectorStore.similaritySearch(SearchRequest.builder()
+                .query(question)
+                .topK(5)
+                .build());
+        List<Product> similaritySearchResult = documents.stream()
+                .map(document -> {
+                    Map<String, Object> metadata = document.getMetadata();
+                    Long productId = ((Integer) metadata.get("productId")).longValue();
+                    return productStorage.get(productId);
+                }).toList();
+
+
+        String lowerKeyword = keyword.toLowerCase();
+        List<Product> keywordResult = productStorage.values().stream()
+                .filter(product -> product.getName().toLowerCase().contains(lowerKeyword) || product.getDescription().toLowerCase().contains(lowerKeyword))
+                .toList();
+
+        List<Product> result = new ArrayList<>();
+        result.addAll(similaritySearchResult);
+        result.addAll(keywordResult);
+
+        return result;
     }
 }

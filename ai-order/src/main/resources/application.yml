@@ -4,3 +4,22 @@ server:
 spring:
   application:
     name: ai-order
+  elasticsearch:
+    uris: 127.0.0.1:9200
+    username: elastic
+    password: Q2i6oixj5uF=UL8yq7z1
+  ai:
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY}
+      chat:
+        options:
+            model: qwen3-max
+      embedding:
+        options:
+          model: text-embedding-v4
+    vectorstore:
+      elasticsearch:
+        initialize-schema: true
+        index-name: ai-order-index
+        dimensions: 1024
+        similarity: cosine
