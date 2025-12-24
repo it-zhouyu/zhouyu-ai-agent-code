@@ -8,6 +8,7 @@ import com.alibaba.cloud.ai.graph.checkpoint.Checkpoint;
 import com.alibaba.cloud.ai.graph.checkpoint.config.SaverConfig;
 import com.alibaba.cloud.ai.graph.checkpoint.savers.MemorySaver;
 import com.alibaba.cloud.ai.graph.exception.GraphStateException;
+import com.alibaba.cloud.ai.graph.observation.GraphObservationLifecycleListener;
 import com.alibaba.cloud.ai.graph.store.StoreItem;
 import com.alibaba.cloud.ai.graph.store.stores.MemoryStore;
 import com.zhouyu.blog.ContentNodeAction;
@@ -42,7 +43,7 @@ import static com.alibaba.cloud.ai.graph.action.AsyncNodeAction.node_async;
 public class GraphConfig {
 
     @Bean
-    public CompiledGraph simpleStateGraph(ChatClient.Builder chatClientBuilder) throws GraphStateException {
+    public CompiledGraph simpleStateGraph(ChatClient.Builder chatClientBuilder, CompileConfig compileConfig) throws GraphStateException {
         ChatClient chatClient = chatClientBuilder.build();
 
         StateGraph stateGraph = new StateGraph();
@@ -54,7 +55,7 @@ public class GraphConfig {
                 .addEdge("title", "content")
                 .addEdge("content", END);
 
-        CompiledGraph compiledGraph = stateGraph.compile();
+        CompiledGraph compiledGraph = stateGraph.compile(compileConfig);
 
         GraphRepresentation representation = compiledGraph.getGraph(GraphRepresentation.Type.MERMAID);
         System.out.println(representation.content());

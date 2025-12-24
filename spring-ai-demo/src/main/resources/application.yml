@@ -29,6 +29,10 @@ spring:
         repository:
           jdbc:
             initialize-schema: always
+      client:
+        observations:
+          log-prompt: true
+          log-completion: true
     mcp:
       client:
         name: spring-ai-mcp-client-demo
@@ -36,6 +40,28 @@ spring:
           connections:
             server1:
               url: http://localhost:8082
+    tools:
+      observations:
+        include-content: true
+  application:
+    name: spring-ai-demo
 
 server:
   port: 8081
+
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "*"
+#  tracing:
+#    sampling:
+#      probability: 1.0 # 全量采样
+#  otlp:
+#    tracing:
+#      # SkyWalking OAP 的地址
+#      endpoint: http://127.0.0.1:11800
+#      transport: grpc
+#  observations:
+#    key-values:
+#      application: ${spring.application.name}

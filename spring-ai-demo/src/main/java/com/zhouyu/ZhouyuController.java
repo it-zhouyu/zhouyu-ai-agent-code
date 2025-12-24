@@ -1,5 +1,9 @@
 package com.zhouyu;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;
@@ -46,6 +50,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 作者：IT周瑜
@@ -366,5 +371,33 @@ public class ZhouyuController {
         public String[] split(String text) {
             return text.split("\\s*\\R\\s*\\R\\s*");
         }
+    }
+
+    // -javaagent:/Users/dadudu/dev/skywalking-agent/skywalking-agent.jar
+    //-Dskywalking.agent.service_name=spring-ai-demo
+    //-Dskywalking.collector.backend_service=127.0.0.1:11800
+
+    @Autowired
+    private ObservationRegistry observationRegistry;
+
+    @Autowired
+    private MeterRegistry meterRegistry;
+
+    @GetMapping("/testMetric")
+    public String testMetric() {
+
+        meterRegistry.counter("metric.zhouyu.count", "endpoint", "/testMetric").increment();
+
+        Observation.createNotStarted("zhouyu.business.process", observationRegistry)
+                .lowCardinalityKeyValue("zhouyu.uid", "123")
+                .lowCardinalityKeyValue("zhouyu.modelName", "qwen3")
+                .highCardinalityKeyValue("zhouyu.trace.id", UUID.randomUUID().toString())
+                .contextualName("处理业务指标")
+                .observe(() -> {
+                    System.out.println("业务逻辑");
+                    return "success";
+                });
+
+        return "metric";
     }
 }
