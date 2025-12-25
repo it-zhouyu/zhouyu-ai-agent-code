@@ -369,7 +369,9 @@ public class ZhouyuController {
         }
 
         public String[] split(String text) {
-            return text.split("\\s*\\R\\s*\\R\\s*");
+            // 统一换行符为 \n，避免 Windows/Mac 平台差异
+            String normalizedText = text.replaceAll("\\r\\n?", "\n");
+            return normalizedText.split("\\n\\s*\\n");
         }
     }
 
