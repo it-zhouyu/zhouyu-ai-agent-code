@@ -274,7 +274,11 @@ public class ZhouyuController {
 
         return chatClient
                 .prompt()
-                .advisors(MessageChatMemoryAdvisor.builder(chatMemory).build(), retrievalAugmentationAdvisor)
+                .advisors(MessageChatMemoryAdvisor.builder(chatMemory)
+//                        .order(1)  // 默认MessageChatMemoryAdvisor的order为Advisor.DEFAULT_CHAT_MEMORY_PRECEDENCE_ORDER，Integer.MIN_VALUE+1000，
+//                  会排在RetrievalAugmentationAdvisor的前面，导致chatMemory中存的是原始的query，而不是rag增强后的query，可以调整order为1，使得排在RetrievalAugmentationAdvisor的后面，
+//                  RetrievalAugmentationAdvisor的order默认为0，从而使得chatMemory中存的是rag增强后的query
+                        .build(), retrievalAugmentationAdvisor)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, chatId))
                 .user(question)
                 .call()
