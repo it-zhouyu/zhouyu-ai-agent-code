@@ -22,5 +22,6 @@ spring:
         version: 1.0.0
         protocol: streamable
 
+
 server:
   port: 8082

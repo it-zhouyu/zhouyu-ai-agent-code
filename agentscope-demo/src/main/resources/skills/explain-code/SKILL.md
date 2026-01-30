@@ -11,5 +11,5 @@ description: 当需要解释代码时，使用这个技能
 2. 分步解释发生了什么
                 
 ## 其他需求和规则
-1. 如果是Java代码则读取[.references/java.md]来获取其他详细规则和需求
-2. 如果是Python代码则读取[.references/python.md]来获取其他详细规则和需求
+1. 如果是Java代码则读取[./java.md]来获取其他详细规则和需求
+2. 如果是Python代码则读取[./python.md]来获取其他详细规则和需求

@@ -32,6 +32,7 @@
         <module>ai-engineer</module>
         <module>ai-multi-model</module>
         <module>ai-order</module>
+        <module>agentscope-demo</module>
     </modules>
 
     <properties>
